@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Pelanggan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <script>
+        validateAccess("pelanggan");
+    </script>
+
+    <!-- Navbar diambil dari script di halaman sebelumnya -->
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4"><i class="fas fa-user-tag"></i> Manajemen Pelanggan</h2>
+        
+        <!-- Form untuk Tambah/Edit Pelanggan -->
+        <div id="pelangganFormContainer" class="mb-4">
+            <form id="pelangganForm">
+                <input type="hidden" id="pelangganId" />
+                <div class="mb-3">
+                    <label for="pelangganNama" class="form-label">Nama Pelanggan</label>
+                    <input type="text" class="form-control" id="pelangganNama" required>
+                </div>
+                <div class="mb-3">
+                    <label for="pelangganEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="pelangganEmail" required>
+                </div>
+                <div class="mb-3">
+                    <label for="pelangganNoHp" class="form-label">Nomor Handphone</label>
+                    <input type="text" class="form-control" id="pelangganNoHp" required>
+                </div>
+                <div class="mb-3">
+                    <label for="pelangganAlamat" class="form-label">Alamat</label>
+                    <textarea class="form-control" id="pelangganAlamat" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success w-100" id="submitButton">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
+            </form>
+        </div>
+
+        <!-- Tabel Daftar Pelanggan -->
+        <table class="table table-striped" id="pelangganTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>Nomor Handphone</th>
+                    <th>Alamat</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Daftar pelanggan akan dimuat di sini -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const pelangganList = JSON.parse(localStorage.getItem("pelanggan")) || [];
+        
+        // Fungsi untuk menampilkan daftar pelanggan
+        const renderPelanggan = () => {
+            const pelangganTable = document.getElementById("pelangganTable").getElementsByTagName('tbody')[0];
+            pelangganTable.innerHTML = "";
+            pelangganList.forEach(pelanggan => {
+                let row = pelangganTable.insertRow();
+                row.insertCell(0).innerText = pelanggan.id;
+                row.insertCell(1).innerText = pelanggan.nama;
+                row.insertCell(2).innerText = pelanggan.email;
+                row.insertCell(3).innerText = pelanggan.noHp;
+                row.insertCell(4).innerText = pelanggan.alamat;
+
+                let editButton = document.createElement("button");
+                editButton.classList.add("btn", "btn-warning", "me-2");
+                editButton.innerHTML = '<i class="fas fa-edit"></i> Edit';
+                editButton.onclick = () => editPelanggan(pelanggan.id);
+                row.insertCell(5).appendChild(editButton);
+
+                let deleteButton = document.createElement("button");
+                deleteButton.classList.add("btn", "btn-danger");
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i> Hapus';
+                deleteButton.onclick = () => deletePelanggan(pelanggan.id);
+                row.insertCell(5).appendChild(deleteButton);
+            });
+        };
+
+        // Fungsi untuk menghapus pelanggan
+        const deletePelanggan = (id) => {
+            const index = pelangganList.findIndex(p => p.id === id);
+            if (index !== -1) {
+                pelangganList.splice(index, 1);
+                localStorage.setItem("pelanggan", JSON.stringify(pelangganList));
+                renderPelanggan();
+            }
+        };
+
+        // Fungsi untuk mengedit pelanggan
+        const editPelanggan = (id) => {
+            const pelanggan = pelangganList.find(p => p.id === id);
+            if (pelanggan) {
+                document.getElementById("pelangganId").value = pelanggan.id;
+                document.getElementById("pelangganNama").value = pelanggan.nama;
+                document.getElementById("pelangganEmail").value = pelanggan.email;
+                document.getElementById("pelangganNoHp").value = pelanggan.noHp;
+                document.getElementById("pelangganAlamat").value = pelanggan.alamat;
+                document.getElementById("submitButton").innerHTML = '<i class="fas fa-pen"></i> Edit Pelanggan';
+            }
+        };
+
+        // Fungsi untuk menyimpan pelanggan baru atau mengupdate pelanggan yang ada
+        const savePelanggan = (e) => {
+            e.preventDefault();
+            
+            const pelangganId = document.getElementById("pelangganId").value;
+            const pelangganNama = document.getElementById("pelangganNama").value.trim();
+            const pelangganEmail = document.getElementById("pelangganEmail").value.trim();
+            const pelangganNoHp = document.getElementById("pelangganNoHp").value.trim();
+            const pelangganAlamat = document.getElementById("pelangganAlamat").value.trim();
+
+            if (pelangganId) {
+                // Update pelanggan
+                const pelangganIndex = pelangganList.findIndex(p => p.id === pelangganId);
+                if (pelangganIndex !== -1) {
+                    pelangganList[pelangganIndex] = { id: pelangganId, nama: pelangganNama, email: pelangganEmail, noHp: pelangganNoHp, alamat: pelangganAlamat };
+                }
+            } else {
+                // Tambah pelanggan baru
+                const newPelanggan = {
+                    id: Date.now().toString(), // Menggunakan timestamp sebagai ID unik
+                    nama: pelangganNama,
+                    email: pelangganEmail,
+                    noHp: pelangganNoHp,
+                    alamat: pelangganAlamat
+                };
+                pelangganList.push(newPelanggan);
+            }
+
+            localStorage.setItem("pelanggan", JSON.stringify(pelangganList));
+            renderPelanggan();
+            resetForm();
+        };
+
+        // Fungsi untuk mereset form
+        const resetForm = () => {
+            document.getElementById("pelangganForm").reset();
+            document.getElementById("pelangganId").value = "";
+            document.getElementById("submitButton").innerHTML = '<i class="fas fa-save"></i> Simpan';
+        };
+
+        document.getElementById("pelangganForm").addEventListener("submit", savePelanggan);
+
+        renderPelanggan();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
