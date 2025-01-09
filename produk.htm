@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Produk</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .table th, .table td {
+            text-align: center;
+        }
+        .table td button {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        validateAccess("produk");
+    </script>
+
+    <!-- Navbar diambil dari script di halaman sebelumnya -->
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4"><i class="fas fa-cogs"></i> Manajemen Produk</h2>
+        
+        <!-- Form untuk Tambah/Edit Produk -->
+        <div id="produkFormContainer" class="mb-4">
+            <form id="produkForm">
+                <input type="hidden" id="produkId" />
+                <div class="mb-3">
+                    <label for="produkNama" class="form-label">Nama Produk</label>
+                    <input type="text" class="form-control" id="produkNama" required>
+                </div>
+                <div class="mb-3">
+                    <label for="produkHarga" class="form-label">Harga</label>
+                    <input type="number" class="form-control" id="produkHarga" required>
+                </div>
+                <div class="mb-3">
+                    <label for="produkStok" class="form-label">Stok</label>
+                    <input type="number" class="form-control" id="produkStok" required>
+                </div>
+                <div class="mb-3">
+                    <label for="produkKategori" class="form-label">Kategori</label>
+                    <input type="text" class="form-control" id="produkKategori" required>
+                </div>
+                <button type="submit" class="btn btn-success w-100" id="submitButton">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
+            </form>
+        </div>
+
+        <!-- Tabel Daftar Produk -->
+        <table class="table table-striped" id="produkTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama</th>
+                    <th>Harga</th>
+                    <th>Stok</th>
+                    <th>Kategori</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Daftar produk akan dimuat di sini -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const produkList = JSON.parse(localStorage.getItem("produk")) || [];
+        
+        // Fungsi untuk membuat ID unik
+        const generateUniqueId = () => {
+            const timestamp = new Date().getTime();
+            const randomNumber = Math.floor(Math.random() * 10000); // Angka acak untuk memastikan ID unik
+            return `P-${timestamp}-${randomNumber}`;
+        };
+
+        // Fungsi untuk menampilkan daftar produk
+        const renderProduk = () => {
+            const produkTable = document.getElementById("produkTable").getElementsByTagName('tbody')[0];
+            produkTable.innerHTML = "";
+            produkList.forEach(produk => {
+                let row = produkTable.insertRow();
+                row.insertCell(0).innerText = produk.id;
+                row.insertCell(1).innerText = produk.nama;
+                row.insertCell(2).innerText = produk.harga;
+                row.insertCell(3).innerText = produk.stok;
+                row.insertCell(4).innerText = produk.kategori;
+
+                let editButton = document.createElement("button");
+                editButton.classList.add("btn", "btn-warning", "me-2");
+                editButton.innerHTML = '<i class="fas fa-edit"></i> Edit';
+                editButton.onclick = () => editProduk(produk.id);
+                row.insertCell(5).appendChild(editButton);
+
+                let deleteButton = document.createElement("button");
+                deleteButton.classList.add("btn", "btn-danger");
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i> Hapus';
+                deleteButton.onclick = () => deleteProduk(produk.id);
+                row.insertCell(5).appendChild(deleteButton);
+            });
+        };
+
+        // Fungsi untuk menghapus produk
+        const deleteProduk = (id) => {
+            const index = produkList.findIndex(p => p.id === id);
+            if (index !== -1) {
+                produkList.splice(index, 1);
+                localStorage.setItem("produk", JSON.stringify(produkList));
+                renderProduk();
+            }
+        };
+
+        // Fungsi untuk mengedit produk
+        const editProduk = (id) => {
+            const produk = produkList.find(p => p.id === id);
+            if (produk) {
+                document.getElementById("produkId").value = produk.id;
+                document.getElementById("produkNama").value = produk.nama;
+                document.getElementById("produkHarga").value = produk.harga;
+                document.getElementById("produkStok").value = produk.stok;
+                document.getElementById("produkKategori").value = produk.kategori;
+                document.getElementById("submitButton").innerHTML = '<i class="fas fa-pen"></i> Edit Produk';
+            }
+        };
+
+        // Fungsi untuk menyimpan produk baru atau mengupdate produk yang ada
+        const saveProduk = (e) => {
+            e.preventDefault();
+            
+            const produkId = document.getElementById("produkId").value;
+            const produkNama = document.getElementById("produkNama").value.trim();
+            const produkHarga = document.getElementById("produkHarga").value.trim();
+            const produkStok = document.getElementById("produkStok").value.trim();
+            const produkKategori = document.getElementById("produkKategori").value.trim();
+
+            if (produkId) {
+                // Update produk
+                const produkIndex = produkList.findIndex(p => p.id === produkId);
+                if (produkIndex !== -1) {
+                    produkList[produkIndex] = { id: produkId, nama: produkNama, harga: produkHarga, stok: produkStok, kategori: produkKategori };
+                }
+            } else {
+                // Tambah produk baru dengan ID unik
+                const newProduk = {
+                    id: generateUniqueId(),
+                    nama: produkNama,
+                    harga: produkHarga,
+                    stok: produkStok,
+                    kategori: produkKategori
+                };
+                produkList.push(newProduk);
+            }
+
+            localStorage.setItem("produk", JSON.stringify(produkList));
+            renderProduk();
+            resetForm();
+        };
+
+        // Fungsi untuk mereset form
+        const resetForm = () => {
+            document.getElementById("produkForm").reset();
+            document.getElementById("produkId").value = "";
+            document.getElementById("submitButton").innerHTML = '<i class="fas fa-save"></i> Simpan';
+        };
+
+        document.getElementById("produkForm").addEventListener("submit", saveProduk);
+
+        renderProduk();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
