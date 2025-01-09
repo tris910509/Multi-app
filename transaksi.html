@@ -13,6 +13,9 @@
         .container {
             max-width: 1200px;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -70,12 +73,12 @@
             <button type="submit" class="btn btn-primary w-100"><i class="fas fa-check-circle"></i> Konfirmasi Transaksi</button>
         </form>
 
-        <div id="konfirmasiPembayaran" class="mt-5 d-none">
+        <div id="konfirmasiPembayaran" class="mt-5 hidden">
             <h4 class="text-center">Pembayaran Belum Lunas, Harap Konfirmasi</h4>
             <button class="btn btn-warning w-100" onclick="window.location.href='pembayaran.html'">Konfirmasi Pembayaran</button>
         </div>
 
-        <div id="strukPembayaran" class="mt-5 d-none">
+        <div id="strukPembayaran" class="mt-5 hidden">
             <h5>Struk Pembayaran</h5>
             <div class="border p-3" id="strukContent"></div>
             <button class="btn btn-success mt-3" onclick="window.print()"><i class="fas fa-print"></i> Cetak Struk</button>
@@ -85,7 +88,6 @@
     <script>
         // Data yang diambil dari LocalStorage
         const produkList = JSON.parse(localStorage.getItem("produk")) || [];
-        const transaksiList = JSON.parse(localStorage.getItem("transaksi")) || [];
         const pelangganList = JSON.parse(localStorage.getItem("pelanggan")) || [];
 
         const formTransaksi = document.getElementById("formTransaksi");
@@ -132,7 +134,7 @@
                 <p><strong>Metode Pembayaran:</strong> ${transaksi.metodePembayaran}</p>
                 <p><strong>Bukti Pembayaran:</strong> ${transaksi.buktiPembayaran || "Tidak Ada"}</p>
             `;
-            document.getElementById("strukPembayaran").classList.remove("d-none");
+            document.getElementById("strukPembayaran").classList.remove("hidden");
         };
 
         // Mengonfirmasi transaksi
@@ -145,6 +147,12 @@
             const diskon = parseInt(diskonField.value) || 0;
             const metodePembayaran = metodePembayaranSelect.value;
             const buktiPembayaran = document.getElementById("buktiPembayaran").files[0];
+
+            // Validasi inputan
+            if (!produkId || !jumlah || !metodePembayaran) {
+                alert("Semua field wajib diisi!");
+                return;
+            }
 
             const produk = produkList.find(p => p.id === produkId);
             if (produk) {
@@ -163,14 +171,17 @@
                     pelanggan: pelangganSelect.value
                 };
 
+                // Simpan transaksi ke localStorage
+                let transaksiList = JSON.parse(localStorage.getItem("transaksi")) || [];
                 transaksiList.push(transaksi);
                 localStorage.setItem("transaksi", JSON.stringify(transaksiList));
 
+                // Menampilkan struk atau konfirmasi pembayaran
                 if (transaksi.status === "Lunas") {
                     tampilkanStruk(transaksi);
                 } else {
                     document.getElementById("formTransaksi").reset();
-                    document.getElementById("konfirmasiPembayaran").classList.remove("d-none");
+                    document.getElementById("konfirmasiPembayaran").classList.remove("hidden");
                 }
             } else {
                 alert("Produk tidak ditemukan!");
