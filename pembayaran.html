@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Halaman Pembayaran</title>
+    <title>Daftar Transaksi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -13,127 +13,101 @@
         .container {
             max-width: 1200px;
         }
+        .table th, .table td {
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center mb-4"><i class="fas fa-credit-card"></i> Pembayaran</h2>
+        <h2 class="text-center mb-4"><i class="fas fa-list-ul"></i> Daftar Transaksi</h2>
 
-        <!-- Form Pembayaran -->
-        <form id="formPembayaran">
-            <h5>Detail Transaksi</h5>
-            <div class="mb-3">
-                <label for="idTransaksi" class="form-label">ID Transaksi</label>
-                <input type="text" class="form-control" id="idTransaksi" disabled>
+        <!-- Daftar Transaksi -->
+        <div class="card">
+            <div class="card-header"><strong>Daftar Semua Transaksi</strong></div>
+            <div class="card-body">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID Transaksi</th>
+                            <th>Nama Pelanggan</th>
+                            <th>Jumlah Produk</th>
+                            <th>Total Pembayaran</th>
+                            <th>Status Pembayaran</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="daftarTransaksi">
+                        <!-- Daftar transaksi dimuat di sini -->
+                    </tbody>
+                </table>
             </div>
-            <div class="mb-3">
-                <label for="produkNama" class="form-label">Nama Produk</label>
-                <input type="text" class="form-control" id="produkNama" disabled>
-            </div>
-            <div class="mb-3">
-                <label for="jumlahProduk" class="form-label">Jumlah</label>
-                <input type="number" class="form-control" id="jumlahProduk" disabled>
-            </div>
-            <div class="mb-3">
-                <label for="totalHarga" class="form-label">Total Harga</label>
-                <input type="text" class="form-control" id="totalHarga" disabled>
-            </div>
-            <div class="mb-3">
-                <label for="bayar" class="form-label">Pembayaran</label>
-                <input type="number" class="form-control" id="bayar" min="1" required>
-            </div>
-            <div class="mb-3">
-                <label for="metodePembayaran" class="form-label">Metode Pembayaran</label>
-                <select class="form-select" id="metodePembayaran" required>
-                    <option value="" disabled selected>Pilih Metode Pembayaran</option>
-                    <option value="Cash">Cash</option>
-                    <option value="Debit">Debit</option>
-                    <option value="Credit">Credit</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-check-circle"></i> Konfirmasi Pembayaran</button>
-        </form>
-
-        <!-- Konfirmasi Pembayaran dan Struk -->
-        <div id="strukPembayaran" class="mt-5 d-none">
-            <h5>Struk Pembayaran</h5>
-            <div class="border p-3" id="strukContent"></div>
-            <button class="btn btn-success mt-3" onclick="window.print()"><i class="fas fa-print"></i> Cetak Struk</button>
         </div>
     </div>
 
     <script>
-        const transaksiList = JSON.parse(localStorage.getItem("transaksi")) || [];
-        const produkList = JSON.parse(localStorage.getItem("produk")) || [];
+        // Contoh data transaksi
+        let transaksiData = JSON.parse(localStorage.getItem('transaksiData')) || [];
 
-        const generateIDTransaksi = () => `TRX-${new Date().getTime()}`;
+        // Fungsi untuk menampilkan daftar transaksi
+        const tampilkanDaftarTransaksi = () => {
+            const daftarTransaksiTable = document.getElementById('daftarTransaksi');
+            daftarTransaksiTable.innerHTML = '';  // Bersihkan daftar transaksi
+            transaksiData.forEach((transaksi, index) => {
+                daftarTransaksiTable.innerHTML += `
+                    <tr>
+                        <td>${transaksi.idTransaksi}</td>
+                        <td>${transaksi.namaPelanggan}</td>
+                        <td>${transaksi.jumlahProduk}</td>
+                        <td>Rp ${transaksi.totalPembayaran}</td>
+                        <td>
+                            <span class="badge ${transaksi.statusPembayaran === 'Lunas' ? 'bg-success' : 'bg-warning'}">
+                                ${transaksi.statusPembayaran}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-info btn-sm" onclick="editTransaksi(${index})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="hapusTransaksi(${index})">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                            ${transaksi.statusPembayaran !== 'Lunas' ? 
+                                `<button class="btn btn-success btn-sm" onclick="konfirmasiPembayaran(${index})">
+                                    <i class="fas fa-check"></i> Konfirmasi Pembayaran
+                                </button>` : ''}
+                        </td>
+                    </tr>
+                `;
+            });
+        };
 
-        const renderTransaksiInfo = (transaksiId) => {
-            const transaksi = transaksiList.find(t => t.id === transaksiId);
-            if (transaksi) {
-                document.getElementById("idTransaksi").value = transaksi.id;
-                document.getElementById("produkNama").value = transaksi.produk;
-                document.getElementById("jumlahProduk").value = transaksi.jumlah;
-                document.getElementById("totalHarga").value = `Rp ${transaksi.totalHarga.toLocaleString()}`;
+        // Fungsi untuk mengedit transaksi
+        const editTransaksi = (index) => {
+            const transaksi = transaksiData[index];
+            // Implementasikan logic untuk mengedit transaksi, misalnya:
+            alert(`Edit transaksi ID: ${transaksi.idTransaksi}`);
+        };
+
+        // Fungsi untuk menghapus transaksi
+        const hapusTransaksi = (index) => {
+            if (confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
+                transaksiData.splice(index, 1);
+                localStorage.setItem('transaksiData', JSON.stringify(transaksiData));
+                tampilkanDaftarTransaksi();
             }
         };
 
-        const konfirmasiPembayaran = (event) => {
-            event.preventDefault();
-
-            const idTransaksi = document.getElementById("idTransaksi").value;
-            const bayar = parseInt(document.getElementById("bayar").value) || 0;
-            const metodePembayaran = document.getElementById("metodePembayaran").value;
-
-            const transaksi = transaksiList.find(t => t.id === idTransaksi);
-            if (transaksi) {
-                const totalHarga = transaksi.totalHarga;
-                if (bayar >= totalHarga) {
-                    const kembalian = bayar - totalHarga;
-
-                    // Simpan transaksi pembayaran di LocalStorage
-                    transaksi.pembayaran = {
-                        bayar,
-                        metode: metodePembayaran,
-                        kembalian
-                    };
-                    localStorage.setItem("transaksi", JSON.stringify(transaksiList));
-
-                    tampilkanStruk(transaksi, kembalian);
-
-                    document.getElementById("formPembayaran").reset();
-                    document.getElementById("strukPembayaran").classList.remove("d-none");
-                } else {
-                    alert("Uang yang dibayarkan kurang!");
-                }
-            } else {
-                alert("Transaksi tidak ditemukan!");
-            }
+        // Fungsi untuk mengkonfirmasi pembayaran
+        const konfirmasiPembayaran = (index) => {
+            const transaksi = transaksiData[index];
+            transaksi.statusPembayaran = 'Lunas';
+            localStorage.setItem('transaksiData', JSON.stringify(transaksiData));
+            tampilkanDaftarTransaksi();
         };
 
-        const tampilkanStruk = (transaksi, kembalian) => {
-            const strukDiv = document.getElementById("strukContent");
-            strukDiv.innerHTML = `
-                <p><strong>ID Transaksi:</strong> ${transaksi.id}</p>
-                <p><strong>Produk:</strong> ${transaksi.produk}</p>
-                <p><strong>Jumlah:</strong> ${transaksi.jumlah}</p>
-                <p><strong>Total Harga:</strong> Rp ${transaksi.totalHarga.toLocaleString()}</p>
-                <p><strong>Metode Pembayaran:</strong> ${transaksi.pembayaran.metode}</p>
-                <p><strong>Bayar:</strong> Rp ${transaksi.pembayaran.bayar.toLocaleString()}</p>
-                <p><strong>Kembalian:</strong> Rp ${kembalian.toLocaleString()}</p>
-            `;
-        };
-
-        // Inisialisasi - Mendapatkan ID transaksi dari URL atau form
-        const urlParams = new URLSearchParams(window.location.search);
-        const transaksiId = urlParams.get("id");
-
-        if (transaksiId) {
-            renderTransaksiInfo(transaksiId);
-        }
-
-        // Event listener form
-        document.getElementById("formPembayaran").addEventListener("submit", konfirmasiPembayaran);
+        // Inisialisasi tampilan daftar transaksi
+        tampilkanDaftarTransaksi();
     </script>
 </body>
 </html>
