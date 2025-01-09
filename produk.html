@@ -17,7 +17,7 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center mb-4"><i class="fas fa-boxes"></i> Halaman Produk</h2>
+        <h2 class="text-center mb-4"><i class="fas fa-box"></i> Halaman Produk</h2>
 
         <!-- Form Tambah Produk -->
         <form id="formProduk">
@@ -90,7 +90,7 @@
                 const row = tableBody.insertRow();
                 row.insertCell(0).textContent = produk.id;
                 row.insertCell(1).textContent = produk.nama;
-                row.insertCell(2).textContent = `Rp ${produk.harga}`;
+                row.insertCell(2).textContent = `Rp ${produk.harga.toLocaleString()}`;
                 row.insertCell(3).textContent = produk.stok;
                 row.insertCell(4).textContent = produk.kategoriNama;
                 row.insertCell(5).textContent = produk.suplierNama;
