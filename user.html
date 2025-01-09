@@ -16,7 +16,34 @@
 
     <div class="container mt-5">
         <h2 class="text-center mb-4"><i class="fas fa-users"></i> Manajemen Pengguna</h2>
-        <button class="btn btn-success mb-4" onclick="showAddUserForm()"><i class="fas fa-plus"></i> Tambah Pengguna</button>
+        
+        <!-- Form untuk Tambah/Edit Pengguna -->
+        <div id="userFormContainer" class="mb-4">
+            <form id="userForm">
+                <input type="hidden" id="userId" />
+                <div class="mb-3">
+                    <label for="userName" class="form-label">Nama</label>
+                    <input type="text" class="form-control" id="userName" required>
+                </div>
+                <div class="mb-3">
+                    <label for="userEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="userEmail" required>
+                </div>
+                <div class="mb-3">
+                    <label for="userRole" class="form-label">Role</label>
+                    <select class="form-control" id="userRole">
+                        <option value="Admin">Admin</option>
+                        <option value="Kasir">Kasir</option>
+                        <option value="Operator">Operator</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success w-100" id="submitButton">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
+            </form>
+        </div>
+
+        <!-- Tabel Daftar Pengguna -->
         <table class="table table-striped" id="userTable">
             <thead>
                 <tr>
@@ -35,8 +62,8 @@
 
     <script>
         const users = JSON.parse(localStorage.getItem("users")) || [];
-
-        // Render daftar pengguna
+        
+        // Fungsi untuk menampilkan daftar pengguna
         const renderUsers = () => {
             const userTable = document.getElementById("userTable").getElementsByTagName('tbody')[0];
             userTable.innerHTML = "";
@@ -47,6 +74,12 @@
                 row.insertCell(2).innerText = user.email;
                 row.insertCell(3).innerText = user.role;
 
+                let editButton = document.createElement("button");
+                editButton.classList.add("btn", "btn-warning", "me-2");
+                editButton.innerHTML = '<i class="fas fa-edit"></i> Edit';
+                editButton.onclick = () => editUser(user.id);
+                row.insertCell(4).appendChild(editButton);
+
                 let deleteButton = document.createElement("button");
                 deleteButton.classList.add("btn", "btn-danger");
                 deleteButton.innerHTML = '<i class="fas fa-trash"></i> Hapus';
@@ -55,6 +88,7 @@
             });
         };
 
+        // Fungsi untuk menghapus pengguna
         const deleteUser = (id) => {
             const index = users.findIndex(u => u.id === id);
             if (index !== -1) {
@@ -63,6 +97,58 @@
                 renderUsers();
             }
         };
+
+        // Fungsi untuk mengedit pengguna
+        const editUser = (id) => {
+            const user = users.find(u => u.id === id);
+            if (user) {
+                document.getElementById("userId").value = user.id;
+                document.getElementById("userName").value = user.name;
+                document.getElementById("userEmail").value = user.email;
+                document.getElementById("userRole").value = user.role;
+                document.getElementById("submitButton").innerHTML = '<i class="fas fa-pen"></i> Edit Pengguna';
+            }
+        };
+
+        // Fungsi untuk menyimpan pengguna baru atau mengupdate pengguna yang ada
+        const saveUser = (e) => {
+            e.preventDefault();
+            
+            const userId = document.getElementById("userId").value;
+            const userName = document.getElementById("userName").value.trim();
+            const userEmail = document.getElementById("userEmail").value.trim();
+            const userRole = document.getElementById("userRole").value;
+
+            if (userId) {
+                // Update pengguna
+                const userIndex = users.findIndex(u => u.id === userId);
+                if (userIndex !== -1) {
+                    users[userIndex] = { id: userId, name: userName, email: userEmail, role: userRole };
+                }
+            } else {
+                // Tambah pengguna baru
+                const newUser = {
+                    id: Date.now().toString(), // Menggunakan timestamp sebagai ID unik
+                    name: userName,
+                    email: userEmail,
+                    role: userRole
+                };
+                users.push(newUser);
+            }
+
+            localStorage.setItem("users", JSON.stringify(users));
+            renderUsers();
+            resetForm();
+        };
+
+        // Fungsi untuk mereset form
+        const resetForm = () => {
+            document.getElementById("userForm").reset();
+            document.getElementById("userId").value = "";
+            document.getElementById("submitButton").innerHTML = '<i class="fas fa-save"></i> Simpan';
+        };
+
+        document.getElementById("userForm").addEventListener("submit", saveUser);
 
         renderUsers();
     </script>
