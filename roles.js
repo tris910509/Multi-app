@@ -9,6 +9,7 @@ const rolePermissions = {
         "suplayer",
         "transaksi",
         "pembayaran",
+        "metode pembayaran
         "laporan"
     ],
     Kasir: [
