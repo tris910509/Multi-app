@@ -84,6 +84,20 @@
                     </tbody>
                 </table>
                 <p class="text-end"><strong>Total Belanja: <span id="totalBelanja">Rp 0</span></strong></p>
+
+                <!-- Potongan Harga -->
+                <div class="d-flex justify-content-end">
+                    <label class="form-check-label" for="potonganHarga">
+                        <input type="checkbox" class="form-check-input" id="potonganHarga"> Potongan Harga
+                    </label>
+                </div>
+                <div class="d-flex justify-content-end mt-3" id="potonganField" style="display: none;">
+                    <select class="form-select w-auto" id="jenisPotongan">
+                        <option value="persen">Persen</option>
+                        <option value="jumlah">Jumlah</option>
+                    </select>
+                    <input type="number" class="form-control w-auto ms-2" id="nilaiPotongan" placeholder="Masukkan nilai potongan" min="0">
+                </div>
             </div>
         </div>
 
@@ -214,49 +228,31 @@
             tampilkanKeranjang();
         };
 
-        // Fungsi untuk menyelesaikan transaksi
-        const selesaikanTransaksi = () => {
-            const diskon = parseFloat(document.getElementById('diskon').value) || 0;
-            const bayar = parseFloat(document.getElementById('bayar').value) || 0;
-            const total = keranjang.reduce((acc, item) => acc + item.harga * item.jumlah, 0);
-            const totalSetelahDiskon = total - (total * diskon / 100);
-            const kembalian = bayar - totalSetelahDiskon;
+        // Fungsi untuk menghitung dan mengaplikasikan potongan harga
+        const hitungPotonganHarga = (total) => {
+            const isPotonganAktif = document.getElementById('potonganHarga').checked;
+            if (!isPotonganAktif) return total;
 
-            if (kembalian < 0) {
-                return alert('Jumlah bayar kurang dari total belanja');
+            const jenisPotongan = document.getElementById('jenisPotongan').value;
+            const nilaiPotongan = parseFloat(document.getElementById('nilaiPotongan').value);
+
+            if (jenisPotongan === 'persen') {
+                return total - (total * (nilaiPotongan / 100));
+            } else {
+                return total - nilaiPotongan;
             }
-
-            // Simpan transaksi
-            const transaksi = {
-                idTransaksi: document.getElementById('idTransaksi').value,
-                pelanggan: document.getElementById('jenisPelanggan').value === 'Member' 
-                          ? pelangganData.find(p => p.id === document.getElementById('idMember').value).nama
-                          : document.getElementById('namaPelanggan').value,
-                produk: keranjang,
-                total: totalSetelahDiskon,
-                bayar: bayar,
-                kembalian: kembalian,
-                metodePembayaran: document.getElementById('metodePembayaran').value
-            };
-
-            console.log('Transaksi selesai:', transaksi);
-            alert('Transaksi selesai, terima kasih!');
-            
-            // Clear form after transaction
-            document.getElementById('formTransaksi').reset();
-            keranjang = [];
-            tampilkanKeranjang();
         };
 
-        // Inisialisasi halaman
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('idTransaksi').value = generateIdTransaksi();
-            tampilkanProduk();
-            tampilkanMember();
-            document.getElementById('jenisPelanggan').addEventListener('change', ubahJenisPelanggan);
-            document.getElementById('btnTambahKeranjang').addEventListener('click', tambahKeKeranjang);
-            document.getElementById('btnSelesaiTransaksi').addEventListener('click', selesaikanTransaksi);
-        });
+        // Event Listener untuk tombol tambah keranjang
+        document.getElementById('btnTambahKeranjang').addEventListener('click', tambahKeKeranjang);
+
+        // Event Listener untuk perubahan jenis pelanggan
+        document.getElementById('jenisPelanggan').addEventListener('change', ubahJenisPelanggan);
+
+        // Inisialisasi
+        tampilkanProduk();
+        tampilkanMember();
+        ubahJenisPelanggan();
     </script>
 </body>
 </html>
