@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Pengguna</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .card {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Validasi akses halaman
+        validateAccess("user");
+    </script>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="home.html">Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="user.html">Manajemen Pengguna</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="pelanggan.html">Pelanggan</a>
+                    </li>
+                </ul>
+                <button class="btn btn-danger ms-auto" id="logoutButton">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Manajemen Pengguna</h2>
+
+        <!-- Form Tambah/Edit Pengguna -->
+        <div class="card p-4 mb-4">
+            <h5 id="formTitle">Tambah Pengguna</h5>
+            <form id="userForm">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nama Lengkap</label>
+                    <input type="text" class="form-control" id="name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="gender" class="form-label">Jenis Kelamin</label>
+                    <select class="form-control" id="gender" required>
+                        <option value="">Pilih</option>
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">No Handphone</label>
+                    <input type="text" class="form-control" id="phone" required>
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label">Alamat</label>
+                    <textarea class="form-control" id="address" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="role" class="form-label">Peran</label>
+                    <select class="form-control" id="role" required>
+                        <option value="">Pilih Peran</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Kasir">Kasir</option>
+                        <option value="Operator">Operator</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success" id="saveButton">Simpan</button>
+                <button type="button" class="btn btn-secondary" id="cancelButton" style="display: none;">Batal</button>
+            </form>
+        </div>
+
+        <!-- Tabel Daftar Pengguna -->
+        <div class="card p-4">
+            <h5>Daftar Pengguna</h5>
+            <table class="table table-striped mt-3">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nama</th>
+                        <th>Jenis Kelamin</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Opsi</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let editingId = null;
+
+        // Ambil data dari localStorage
+        const getUsers = () => JSON.parse(localStorage.getItem("users")) || [];
+
+        // Simpan data ke localStorage
+        const saveUsers = (users) => localStorage.setItem("users", JSON.stringify(users));
+
+        // Tambah atau Edit Pengguna
+        document.getElementById("userForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById("name").value.trim();
+            const gender = document.getElementById("gender").value;
+            const phone = document.getElementById("phone").value.trim();
+            const address = document.getElementById("address").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const role = document.getElementById("role").value;
+
+            const users = getUsers();
+
+            if (editingId) {
+                // Edit pengguna
+                const userIndex = users.findIndex((u) => u.id === editingId);
+                users[userIndex] = { id: editingId, name, gender, phone, address, email, password, role };
+                editingId = null;
+                document.getElementById("formTitle").textContent = "Tambah Pengguna";
+                document.getElementById("saveButton").textContent = "Simpan";
+                document.getElementById("cancelButton").style.display = "none";
+            } else {
+                // Tambah pengguna baru
+                const id = "USR-" + Date.now();
+                users.push({ id, name, gender, phone, address, email, password, role });
+            }
+
+            saveUsers(users);
+            renderUsers();
+            document.getElementById("userForm").reset();
+        });
+
+        // Render daftar pengguna
+        const renderUsers = () => {
+            const users = getUsers();
+            const userTableBody = document.getElementById("userTableBody");
+            userTableBody.innerHTML = "";
+
+            users.forEach((user) => {
+                userTableBody.innerHTML += `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.gender}</td>
+                        <td>${user.role}</td>
+                        <td>${user.email}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editUser('${user.id}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.id}')">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        // Edit pengguna
+        const editUser = (id) => {
+            const users = getUsers();
+            const user = users.find((u) => u.id === id);
+
+            editingId = id;
+
+            document.getElementById("name").value = user.name;
+            document.getElementById("gender").value = user.gender;
+            document.getElementById("phone").value = user.phone;
+            document.getElementById("address").value = user.address;
+            document.getElementById("email").value = user.email;
+            document.getElementById("password").value = user.password;
+            document.getElementById("role").value = user.role;
+
+            document.getElementById("formTitle").textContent = "Edit Pengguna";
+            document.getElementById("saveButton").textContent = "Perbarui";
+            document.getElementById("cancelButton").style.display = "inline-block";
+        };
+
+        // Hapus pengguna
+        const deleteUser = (id) => {
+            const users = getUsers();
+            const filteredUsers = users.filter((u) => u.id !== id);
+            saveUsers(filteredUsers);
+            renderUsers();
+        };
+
+        // Batalkan edit
+        document.getElementById("cancelButton").addEventListener("click", () => {
+            editingId = null;
+            document.getElementById("formTitle").textContent = "Tambah Pengguna";
+            document.getElementById("saveButton").textContent = "Simpan";
+            document.getElementById("cancelButton").style.display = "none";
+            document.getElementById("userForm").reset();
+        });
+
+        // Render pengguna pada halaman load
+        renderUsers();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
