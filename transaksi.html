@@ -5,37 +5,204 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transaksi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="roles.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .table th, .table td {
+            text-align: center;
+        }
+        .table td button {
+            width: 100px;
+        }
+        .keranjang-total {
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Dashboard Kasir</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav" id="navMenu"></ul>
-            </div>
-        </div>
-    </nav>
+    <script>
+        validateAccess("transaksi");
+    </script>
+
+    <!-- Navbar diambil dari script di halaman sebelumnya -->
 
     <div class="container mt-5">
-        <h1>Transaksi</h1>
-        <p>Kelola transaksi pelanggan di sini.</p>
+        <h2 class="text-center mb-4"><i class="fas fa-cash-register"></i> Transaksi</h2>
+        
+        <!-- Form untuk memilih produk dan menambah ke keranjang -->
+        <div id="keranjangFormContainer" class="mb-4">
+            <h4>Keranjang Belanja</h4>
+            <form id="keranjangForm">
+                <div class="mb-3">
+                    <label for="produkSelect" class="form-label">Pilih Produk</label>
+                    <select class="form-control" id="produkSelect" required>
+                        <!-- Opsi produk akan dimuat di sini -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="jumlahSelect" class="form-label">Jumlah</label>
+                    <input type="number" class="form-control" id="jumlahSelect" min="1" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-cart-plus"></i> Tambah ke Keranjang
+                </button>
+            </form>
+        </div>
+
+        <!-- Tabel Keranjang -->
+        <h4>Daftar Keranjang</h4>
+        <table class="table table-striped" id="keranjangTable">
+            <thead>
+                <tr>
+                    <th>Produk</th>
+                    <th>Jumlah</th>
+                    <th>Harga Satuan</th>
+                    <th>Total</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Daftar produk di keranjang akan dimuat di sini -->
+            </tbody>
+        </table>
+
+        <!-- Potongan Harga -->
+        <div class="mb-3">
+            <label for="diskonSelect" class="form-label">Potongan Harga (%)</label>
+            <select class="form-control" id="diskonSelect">
+                <option value="0">Tidak ada potongan</option>
+                <option value="5">5%</option>
+                <option value="10">10%</option>
+                <option value="15">15%</option>
+                <option value="20">20%</option>
+            </select>
+        </div>
+
+        <!-- Total Pembayaran -->
+        <div class="keranjang-total mb-3">
+            <p>Total: <span id="totalPembayaran">0</span></p>
+            <p>Potongan: <span id="potonganHarga">0</span></p>
+            <p><strong>Total Setelah Potongan: <span id="totalAkhir">0</span></strong></p>
+        </div>
+
+        <!-- Tombol Checkout -->
+        <button class="btn btn-success w-100" id="checkoutButton">
+            <i class="fas fa-credit-card"></i> Checkout
+        </button>
     </div>
 
     <script>
-        // Cek user yang login
-        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+        const produkList = JSON.parse(localStorage.getItem("produk")) || [];
+        const keranjang = JSON.parse(localStorage.getItem("keranjang")) || [];
+        const diskonList = [0, 5, 10, 15, 20];
 
-        if (!loggedInUser || !rolePermissions[loggedInUser.role].includes("transaksi")) {
-            alert("Akses terbatas! Anda tidak memiliki hak untuk mengakses halaman ini.");
-            window.location.href = "login.html";
-        } else {
-            // Set navbar sesuai peran
-            document.getElementById("navMenu").innerHTML = generateNavbar(loggedInUser.role);
-        }
+        // Fungsi untuk menampilkan daftar produk pada select
+        const renderProdukSelect = () => {
+            const produkSelect = document.getElementById("produkSelect");
+            produkSelect.innerHTML = "";
+            produkList.forEach(produk => {
+                let option = document.createElement("option");
+                option.value = produk.id;
+                option.innerText = `${produk.nama} - Rp ${produk.harga}`;
+                produkSelect.appendChild(option);
+            });
+        };
+
+        // Fungsi untuk menampilkan keranjang belanja
+        const renderKeranjang = () => {
+            const keranjangTable = document.getElementById("keranjangTable").getElementsByTagName('tbody')[0];
+            keranjangTable.innerHTML = "";
+            let total = 0;
+            keranjang.forEach(item => {
+                let row = keranjangTable.insertRow();
+                row.insertCell(0).innerText = item.produk.nama;
+                row.insertCell(1).innerText = item.jumlah;
+                row.insertCell(2).innerText = `Rp ${item.produk.harga}`;
+                row.insertCell(3).innerText = `Rp ${item.total}`;
+                
+                let deleteButton = document.createElement("button");
+                deleteButton.classList.add("btn", "btn-danger");
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i> Hapus';
+                deleteButton.onclick = () => deleteItemFromKeranjang(item.produk.id);
+                row.insertCell(4).appendChild(deleteButton);
+                
+                total += item.total;
+            });
+
+            document.getElementById("totalPembayaran").innerText = `Rp ${total}`;
+            calculateTotalAfterDiscount(total);
+        };
+
+        // Fungsi untuk menghitung total setelah potongan harga
+        const calculateTotalAfterDiscount = (total) => {
+            const diskon = parseInt(document.getElementById("diskonSelect").value);
+            const potongan = (diskon / 100) * total;
+            const totalAkhir = total - potongan;
+            document.getElementById("potonganHarga").innerText = `Rp ${potongan}`;
+            document.getElementById("totalAkhir").innerText = `Rp ${totalAkhir}`;
+        };
+
+        // Fungsi untuk menambah item ke keranjang
+        const addItemToKeranjang = (produkId, jumlah) => {
+            const produk = produkList.find(p => p.id === produkId);
+            if (produk) {
+                const item = {
+                    produk,
+                    jumlah,
+                    total: produk.harga * jumlah
+                };
+                keranjang.push(item);
+                localStorage.setItem("keranjang", JSON.stringify(keranjang));
+                renderKeranjang();
+            }
+        };
+
+        // Fungsi untuk menghapus item dari keranjang
+        const deleteItemFromKeranjang = (produkId) => {
+            const index = keranjang.findIndex(item => item.produk.id === produkId);
+            if (index !== -1) {
+                keranjang.splice(index, 1);
+                localStorage.setItem("keranjang", JSON.stringify(keranjang));
+                renderKeranjang();
+            }
+        };
+
+        // Event listener untuk form keranjang
+        document.getElementById("keranjangForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const produkId = document.getElementById("produkSelect").value;
+            const jumlah = parseInt(document.getElementById("jumlahSelect").value);
+            addItemToKeranjang(produkId, jumlah);
+            document.getElementById("keranjangForm").reset();
+        });
+
+        // Event listener untuk potongan harga
+        document.getElementById("diskonSelect").addEventListener("change", () => {
+            const totalPembayaran = parseInt(document.getElementById("totalPembayaran").innerText.replace("Rp", "").trim());
+            calculateTotalAfterDiscount(totalPembayaran);
+        });
+
+        // Fungsi untuk checkout
+        document.getElementById("checkoutButton").addEventListener("click", () => {
+            if (keranjang.length === 0) {
+                alert("Keranjang kosong! Tambahkan produk terlebih dahulu.");
+                return;
+            }
+            const totalAkhir = parseInt(document.getElementById("totalAkhir").innerText.replace("Rp", "").trim());
+            alert(`Checkout berhasil! Total pembayaran: Rp ${totalAkhir}`);
+            localStorage.removeItem("keranjang");
+            renderKeranjang();
+        });
+
+        // Inisialisasi produk dan keranjang
+        renderProdukSelect();
+        renderKeranjang();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
