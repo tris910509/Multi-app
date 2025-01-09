@@ -157,9 +157,166 @@
         </div>
     </div>
 
-    <script>
-        // Mengimplementasikan JavaScript untuk mengelola transaksi, keranjang, riwayat transaksi
-        // Tambahkan fungsi `localStorage` untuk produk, pelanggan, transaksi, dan metode pembayaran.
-    </script>
+<script>
+    // Inisialisasi localStorage
+    if (!localStorage.getItem('produk')) {
+        localStorage.setItem('produk', JSON.stringify([
+            { id: 'P001', nama: 'Produk A', harga: 10000, stok: 50, kategori: 'Kategori 1' },
+            { id: 'P002', nama: 'Produk B', harga: 20000, stok: 30, kategori: 'Kategori 2' }
+        ]));
+    }
+
+    if (!localStorage.getItem('riwayatTransaksi')) {
+        localStorage.setItem('riwayatTransaksi', JSON.stringify([]));
+    }
+
+    const produkData = JSON.parse(localStorage.getItem('produk'));
+    const riwayatTransaksi = JSON.parse(localStorage.getItem('riwayatTransaksi'));
+    let keranjang = [];
+
+    // Fungsi untuk menghasilkan ID Transaksi unik
+    const generateIdTransaksi = () => 'TRX' + Date.now();
+
+    // Fungsi untuk menampilkan data produk di dropdown
+    const tampilkanProduk = () => {
+        const produkSelect = document.getElementById('produkId');
+        produkSelect.innerHTML = '';
+        produkData.forEach(produk => {
+            const option = document.createElement('option');
+            option.value = produk.id;
+            option.textContent = `${produk.nama} - Rp ${produk.harga}`;
+            produkSelect.appendChild(option);
+        });
+    };
+
+    // Fungsi untuk menambahkan produk ke keranjang
+    const tambahKeKeranjang = () => {
+        const produkId = document.getElementById('produkId').value;
+        const jumlah = parseInt(document.getElementById('jumlahProduk').value);
+
+        const produk = produkData.find(p => p.id === produkId);
+        if (!produk) return alert('Produk tidak ditemukan');
+        if (jumlah > produk.stok) return alert('Stok tidak mencukupi');
+
+        const produkDiKeranjang = keranjang.find(item => item.id === produkId);
+        if (produkDiKeranjang) {
+            produkDiKeranjang.jumlah += jumlah;
+        } else {
+            keranjang.push({ ...produk, jumlah });
+        }
+
+        tampilkanKeranjang();
+    };
+
+    // Fungsi untuk menampilkan keranjang
+    const tampilkanKeranjang = () => {
+        const keranjangTable = document.querySelector('#keranjangTable tbody');
+        keranjangTable.innerHTML = '';
+
+        let total = 0;
+        keranjang.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.nama}</td>
+                <td>${item.jumlah}</td>
+                <td>Rp ${item.harga}</td>
+                <td>Rp ${item.jumlah * item.harga}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="hapusDariKeranjang(${index})">
+                        <i class="fas fa-trash"></i> Hapus
+                    </button>
+                </td>
+            `;
+            keranjangTable.appendChild(row);
+            total += item.jumlah * item.harga;
+        });
+
+        document.getElementById('totalBelanja').textContent = `Rp ${total}`;
+    };
+
+    // Fungsi untuk menghapus item dari keranjang
+    const hapusDariKeranjang = (index) => {
+        keranjang.splice(index, 1);
+        tampilkanKeranjang();
+    };
+
+    // Fungsi untuk menyelesaikan transaksi
+    const selesaikanTransaksi = () => {
+        const diskon = parseInt(document.getElementById('diskon').value) || 0;
+        const metodePembayaran = document.getElementById('metodePembayaran').value;
+        const bayar = parseInt(document.getElementById('bayar').value);
+
+        const totalBelanja = keranjang.reduce((acc, item) => acc + item.jumlah * item.harga, 0);
+        const totalSetelahDiskon = totalBelanja - (totalBelanja * diskon / 100);
+
+        if (bayar < totalSetelahDiskon) return alert('Pembayaran tidak mencukupi');
+
+        const kembalian = bayar - totalSetelahDiskon;
+        document.getElementById('kembalian').value = `Rp ${kembalian}`;
+
+        // Simpan transaksi ke localStorage
+        const transaksiBaru = {
+            idTransaksi: generateIdTransaksi(),
+            pelanggan: document.getElementById('namaPelanggan').value || 'Umum',
+            keranjang,
+            totalBelanja: totalSetelahDiskon,
+            metodePembayaran,
+            tanggal: new Date().toLocaleString()
+        };
+
+        riwayatTransaksi.push(transaksiBaru);
+        localStorage.setItem('riwayatTransaksi', JSON.stringify(riwayatTransaksi));
+
+        // Kosongkan keranjang dan reset form
+        keranjang = [];
+        tampilkanKeranjang();
+        alert('Transaksi berhasil disimpan!');
+        document.getElementById('formPembayaran').reset();
+    };
+
+    // Fungsi untuk menampilkan riwayat transaksi
+    const tampilkanRiwayatTransaksi = () => {
+        const riwayatTable = document.getElementById('riwayatTransaksiTable');
+        riwayatTable.innerHTML = '';
+
+        riwayatTransaksi.forEach((transaksi, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${transaksi.idTransaksi}</td>
+                <td>${transaksi.pelanggan}</td>
+                <td>Rp ${transaksi.totalBelanja}</td>
+                <td>${transaksi.metodePembayaran}</td>
+                <td>${transaksi.tanggal}</td>
+            `;
+            riwayatTable.appendChild(row);
+        });
+    };
+
+    // Inisialisasi halaman
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('idTransaksi').value = generateIdTransaksi();
+        tampilkanProduk();
+        tampilkanKeranjang();
+        tampilkanRiwayatTransaksi();
+
+        // Event Listener
+        document.getElementById('btnTambahKeranjang').addEventListener('click', tambahKeKeranjang);
+        document.getElementById('btnSelesaiTransaksi').addEventListener('click', selesaikanTransaksi);
+
+        // Tampilkan form pelanggan berdasarkan jenis pelanggan
+        document.getElementById('pelangganJenis').addEventListener('change', (e) => {
+            if (e.target.value === 'member') {
+                document.getElementById('inputPelanggan').classList.add('d-none');
+                document.getElementById('selectMember').classList.remove('d-none');
+            } else {
+                document.getElementById('inputPelanggan').classList.remove('d-none');
+                document.getElementById('selectMember').classList.add('d-none');
+            }
+        });
+    });
+</script>
+
 </body>
 </html>
