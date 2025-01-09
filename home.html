@@ -5,118 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="roles.js"></script>
-    <style>
-        .card-feature {
-            border-radius: 10px;
-            transition: transform 0.2s ease-in-out;
-        }
-        .card-feature:hover {
-            transform: scale(1.05);
-        }
-        .welcome-container {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        }
-    </style>
 </head>
 <body>
-    <script>
-        // Validasi akses halaman
-        validateAccess("home");
-    </script>
-
+    <!-- Navbar Dinamis -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Dashboard</a>
+            <a class="navbar-brand" href="home.html">Dashboard</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav" id="navMenu"></ul>
+                <ul class="navbar-nav" id="dynamicNavbar"></ul>
                 <button class="btn btn-danger ms-auto" id="logoutButton">Logout</button>
             </div>
         </div>
     </nav>
 
     <div class="container mt-5">
-        <div class="welcome-container text-center">
-            <h1 id="welcomeMessage"></h1>
-            <p class="text-muted">Akses semua fitur sesuai peran Anda.</p>
-        </div>
-
-        <div class="row mt-5" id="featureCards">
-            <!-- Kartu fitur akan di-render secara dinamis berdasarkan peran -->
-        </div>
+        <h1 class="text-center">Selamat Datang</h1>
     </div>
 
     <script>
-        // Data fitur yang tersedia
-        const features = {
+        const navItems = {
             Admin: [
-                { title: "Manajemen Pengguna", icon: "fa-users", link: "user.html" },
-                { title: "Daftar Pelanggan", icon: "fa-address-book", link: "pelanggan.html" },
-                { title: "Produk", icon: "fa-box", link: "produk.html" },
-                { title: "Kategori", icon: "fa-tags", link: "kategori.html" },
-                { title: "Item", icon: "fa-cubes", link: "item.html" },
-                { title: "Supplier", icon: "fa-truck", link: "suplayer.html" },
-                { title: "Transaksi", icon: "fa-credit-card", link: "transaksi.html" },
-                { title: "Pembayaran", icon: "fa-wallet", link: "pembayaran.html" },
-                { title: "Laporan", icon: "fa-chart-line", link: "laporan.html" },
+                { name: "Manajemen Pengguna", link: "user.html" },
+                { name: "Pelanggan", link: "pelanggan.html" },
+                { name: "Produk", link: "produk.html" },
+                { name: "Kategori", link: "kategori.html" },
+                { name: "Item", link: "item.html" },
+                { name: "Supplier", link: "suplayer.html" },
+                { name: "Transaksi", link: "transaksi.html" },
+                { name: "Pembayaran", link: "pembayaran.html" },
+                { name: "Laporan", link: "laporan.html" }
             ],
             Kasir: [
-                { title: "Daftar Pelanggan", icon: "fa-address-book", link: "pelanggan.html" },
-                { title: "Transaksi", icon: "fa-credit-card", link: "transaksi.html" },
-                { title: "Pembayaran", icon: "fa-wallet", link: "pembayaran.html" },
+                { name: "Pelanggan", link: "pelanggan.html" },
+                { name: "Transaksi", link: "transaksi.html" },
+                { name: "Pembayaran", link: "pembayaran.html" }
             ],
             Operator: [
-                { title: "Laporan", icon: "fa-chart-line", link: "laporan.html" },
+                { name: "Laporan", link: "laporan.html" }
             ]
         };
 
         const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
 
         if (loggedInUser) {
-            // Render welcome message
-            document.getElementById("welcomeMessage").textContent = `Selamat datang, ${loggedInUser.name} (${loggedInUser.role})!`;
+            const role = loggedInUser.role;
+            const navbar = document.getElementById("dynamicNavbar");
+            const userNavItems = navItems[role] || [];
 
-            // Render navigation menu
-            document.getElementById("navMenu").innerHTML = generateNavbar(loggedInUser.role);
+            userNavItems.forEach(item => {
+                const li = document.createElement("li");
+                li.classList.add("nav-item");
+                li.innerHTML = `<a class="nav-link" href="${item.link}">${item.name}</a>`;
+                navbar.appendChild(li);
+            });
 
-            // Render fitur berdasarkan peran
-            const roleFeatures = features[loggedInUser.role] || [];
-            const featureCards = document.getElementById("featureCards");
-
-            roleFeatures.forEach((feature) => {
-                featureCards.innerHTML += `
-                    <div class="col-md-4 mb-4">
-                        <a href="${feature.link}" class="text-decoration-none">
-                            <div class="card card-feature shadow-sm text-center">
-                                <div class="card-body">
-                                    <i class="fa ${feature.icon} fa-3x text-primary"></i>
-                                    <h5 class="card-title mt-3 text-dark">${feature.title}</h5>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                `;
+            document.getElementById("logoutButton").addEventListener("click", () => {
+                localStorage.removeItem("loggedInUser");
+                alert("Anda telah logout.");
+                window.location.href = "login.html";
             });
         } else {
-            // Redirect ke login jika tidak login
             window.location.href = "login.html";
         }
-
-        // Logout button event listener
-        document.getElementById("logoutButton").addEventListener("click", () => {
-            localStorage.removeItem("loggedInUser");
-            alert("Anda telah logout.");
-            window.location.href = "login.html";
-        });
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
