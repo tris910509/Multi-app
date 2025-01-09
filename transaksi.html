@@ -13,6 +13,9 @@
         .container {
             max-width: 1200px;
         }
+        .keranjang-table td, .keranjang-table th {
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -68,13 +71,15 @@
         <div class="card mb-3">
             <div class="card-header"><strong>Keranjang</strong></div>
             <div class="card-body">
-                <table class="table table-bordered">
+                <table class="table table-bordered keranjang-table">
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
                             <th>Nama Produk</th>
-                            <th>Jumlah</th>
+                            <th>Item</th>
                             <th>Harga</th>
+                            <th>Diskon (Rp / %)</th>
+                            <th>Jumlah</th>
                             <th>Total</th>
                             <th>Aksi</th>
                         </tr>
@@ -90,13 +95,6 @@
                     <label class="form-check-label" for="potonganHarga">
                         <input type="checkbox" class="form-check-input" id="potonganHarga"> Potongan Harga
                     </label>
-                </div>
-                <div class="d-flex justify-content-end mt-3" id="potonganField" style="display: none;">
-                    <select class="form-select w-auto" id="jenisPotongan">
-                        <option value="persen">Persen</option>
-                        <option value="jumlah">Jumlah</option>
-                    </select>
-                    <input type="number" class="form-control w-auto ms-2" id="nilaiPotongan" placeholder="Masukkan nilai potongan" min="0">
                 </div>
             </div>
         </div>
@@ -189,12 +187,19 @@
         const tambahKeKeranjang = () => {
             const produkId = document.getElementById('produkId').value;
             const jumlah = parseInt(document.getElementById('jumlahProduk').value);
+            const diskon = parseFloat(document.getElementById('diskon').value) || 0;
 
             const produk = produkData.find(p => p.id === produkId);
             if (!produk) return alert('Produk tidak ditemukan');
             if (jumlah > produk.stok) return alert('Stok tidak mencukupi');
 
-            keranjang.push({ ...produk, jumlah });
+            keranjang.push({
+                ...produk,
+                jumlah,
+                diskon,
+                subtotal: (produk.harga * jumlah) - diskon
+            });
+
             tampilkanKeranjang();
         };
 
@@ -204,14 +209,20 @@
             keranjangTable.innerHTML = '';
             let total = 0;
             keranjang.forEach((item, index) => {
-                total += item.harga * item.jumlah;
+                total += item.subtotal;
                 keranjangTable.innerHTML += `
                     <tr>
                         <td>${index + 1}</td>
                         <td>${item.nama}</td>
-                        <td>${item.jumlah}</td>
+                        <td>${item.item}</td>
                         <td>Rp ${item.harga}</td>
-                        <td>Rp ${item.harga * item.jumlah}</td>
+                        <td>
+                            <input type="number" class="form-control" value="${item.diskon}" onchange="updateDiskon(${index}, this.value)">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control" value="${item.jumlah}" onchange="updateJumlah(${index}, this.value)">
+                        </td>
+                        <td>Rp ${item.subtotal}</td>
                         <td>
                             <button class="btn btn-danger btn-sm" onclick="hapusDariKeranjang(${index})">
                                 <i class="fas fa-trash"></i> Hapus
@@ -219,6 +230,7 @@
                         </td>
                     </tr>`;
             });
+
             document.getElementById('totalBelanja').textContent = `Rp ${total}`;
         };
 
@@ -228,28 +240,24 @@
             tampilkanKeranjang();
         };
 
-        // Fungsi untuk menghitung dan mengaplikasikan potongan harga
-        const hitungPotonganHarga = (total) => {
-            const isPotonganAktif = document.getElementById('potonganHarga').checked;
-            if (!isPotonganAktif) return total;
+        // Fungsi untuk memperbarui diskon item
+        const updateDiskon = (index, value) => {
+            keranjang[index].diskon = parseFloat(value);
+            keranjang[index].subtotal = (keranjang[index].harga * keranjang[index].jumlah) - keranjang[index].diskon;
+            tampilkanKeranjang();
+        };
 
-            const jenisPotongan = document.getElementById('jenisPotongan').value;
-            const nilaiPotongan = parseFloat(document.getElementById('nilaiPotongan').value);
-
-            if (jenisPotongan === 'persen') {
-                return total - (total * (nilaiPotongan / 100));
-            } else {
-                return total - nilaiPotongan;
-            }
+        // Fungsi untuk memperbarui jumlah item
+        const updateJumlah = (index, value) => {
+            keranjang[index].jumlah = parseInt(value);
+            keranjang[index].subtotal = (keranjang[index].harga * keranjang[index].jumlah) - keranjang[index].diskon;
+            tampilkanKeranjang();
         };
 
         // Event Listener untuk tombol tambah keranjang
         document.getElementById('btnTambahKeranjang').addEventListener('click', tambahKeKeranjang);
-
-        // Event Listener untuk perubahan jenis pelanggan
-        document.getElementById('jenisPelanggan').addEventListener('change', ubahJenisPelanggan);
-
-        // Inisialisasi
+        
+        // Inisialisasi tampilan produk dan member
         tampilkanProduk();
         tampilkanMember();
         ubahJenisPelanggan();
