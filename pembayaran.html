@@ -31,6 +31,36 @@
     <div class="container mt-5">
         <h2 class="text-center mb-4"><i class="fas fa-money-bill-wave"></i> Manajemen Pembayaran</h2>
         
+        <!-- Tombol untuk menambah metode pembayaran -->
+        <div class="mb-3">
+            <button class="btn btn-primary" id="tambahMetodeButton" data-bs-toggle="modal" data-bs-target="#metodePembayaranModal">
+                <i class="fas fa-credit-card"></i> Tambah Metode Pembayaran
+            </button>
+        </div>
+
+        <!-- Modal untuk menambah metode pembayaran -->
+        <div class="modal fade" id="metodePembayaranModal" tabindex="-1" aria-labelledby="metodePembayaranModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="metodePembayaranModalLabel">Tambah Metode Pembayaran</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="metodePembayaranForm">
+                            <div class="mb-3">
+                                <label for="metodePembayaranNama" class="form-label">Nama Metode Pembayaran</label>
+                                <input type="text" class="form-control" id="metodePembayaranNama" required>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-save"></i> Simpan Metode
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Form untuk Tambah/Edit Pembayaran -->
         <div id="pembayaranFormContainer" class="mb-4">
             <form id="pembayaranForm">
@@ -42,9 +72,7 @@
                 <div class="mb-3">
                     <label for="pembayaranMetode" class="form-label">Metode Pembayaran</label>
                     <select class="form-control" id="pembayaranMetode" required>
-                        <option value="Transfer Bank">Transfer Bank</option>
-                        <option value="Kartu Kredit">Kartu Kredit</option>
-                        <option value="Tunai">Tunai</option>
+                        <!-- Opsi metode pembayaran akan dimuat di sini -->
                     </select>
                 </div>
                 <div class="mb-3">
@@ -52,7 +80,7 @@
                     <input type="number" class="form-control" id="pembayaranJumlah" required>
                 </div>
                 <button type="submit" class="btn btn-success w-100" id="submitButton">
-                    <i class="fas fa-save"></i> Simpan
+                    <i class="fas fa-save"></i> Simpan Pembayaran
                 </button>
             </form>
         </div>
@@ -76,6 +104,7 @@
 
     <script>
         const pembayaranList = JSON.parse(localStorage.getItem("pembayaran")) || [];
+        const metodeList = JSON.parse(localStorage.getItem("metodePembayaran")) || [];
         
         // Fungsi untuk membuat ID unik
         const generateUniqueId = () => {
@@ -166,11 +195,40 @@
         const resetForm = () => {
             document.getElementById("pembayaranForm").reset();
             document.getElementById("pembayaranId").value = "";
-            document.getElementById("submitButton").innerHTML = '<i class="fas fa-save"></i> Simpan';
+            document.getElementById("submitButton").innerHTML = '<i class="fas fa-save"></i> Simpan Pembayaran';
+        };
+
+        // Fungsi untuk menampilkan metode pembayaran
+        const renderMetodePembayaran = () => {
+            const pembayaranMetodeSelect = document.getElementById("pembayaranMetode");
+            pembayaranMetodeSelect.innerHTML = "";
+            metodeList.forEach(metode => {
+                let option = document.createElement("option");
+                option.value = metode.nama;
+                option.innerText = metode.nama;
+                pembayaranMetodeSelect.appendChild(option);
+            });
+        };
+
+        // Fungsi untuk menambah metode pembayaran
+        const saveMetodePembayaran = (e) => {
+            e.preventDefault();
+
+            const metodeNama = document.getElementById("metodePembayaranNama").value.trim();
+            if (metodeNama) {
+                const newMetode = { nama: metodeNama };
+                metodeList.push(newMetode);
+                localStorage.setItem("metodePembayaran", JSON.stringify(metodeList));
+                renderMetodePembayaran();
+                document.getElementById("metodePembayaranForm").reset();
+                document.querySelector('[data-bs-dismiss="modal"]').click();
+            }
         };
 
         document.getElementById("pembayaranForm").addEventListener("submit", savePembayaran);
+        document.getElementById("metodePembayaranForm").addEventListener("submit", saveMetodePembayaran);
 
+        renderMetodePembayaran();
         renderPembayaran();
     </script>
 
