@@ -11,13 +11,13 @@
             background-color: #f8f9fa;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
         }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center mb-4"><i class="fas fa-cash-register"></i> Halaman Transaksi</h2>
+        <h2 class="text-center mb-4"><i class="fas fa-shopping-cart"></i> Halaman Transaksi</h2>
 
         <!-- Form Transaksi -->
         <form id="formTransaksi">
@@ -39,19 +39,19 @@
             </div>
             <div id="memberSelect" class="mb-3 d-none">
                 <label for="pelangganMember" class="form-label">Pilih Member</label>
-                <select class="form-select" id="pelangganMember">
-                    <!-- Data member akan dimuat di sini -->
-                </select>
+                <select class="form-select" id="pelangganMember"></select>
             </div>
             <div class="mb-3">
                 <label for="produkId" class="form-label">Pilih Produk</label>
-                <select class="form-select" id="produkId">
-                    <!-- Data produk akan dimuat di sini -->
-                </select>
+                <select class="form-select" id="produkId"></select>
+            </div>
+            <div id="produkInfo" class="mb-3 d-none">
+                <p><strong>Harga:</strong> <span id="produkHarga"></span></p>
+                <p><strong>Stok Tersedia:</strong> <span id="produkStok"></span></p>
             </div>
             <div class="mb-3">
                 <label for="jumlahProduk" class="form-label">Jumlah</label>
-                <input type="number" class="form-control" id="jumlahProduk" min="1" value="1" required>
+                <input type="number" class="form-control" id="jumlahProduk" min="1" required>
             </div>
             <div class="mb-3">
                 <label for="totalHarga" class="form-label">Total Harga</label>
@@ -71,9 +71,7 @@
         <!-- Struk -->
         <div id="strukTransaksi" class="mt-5 d-none">
             <h5>Struk Transaksi</h5>
-            <div class="border p-3" id="strukContent">
-                <!-- Data struk akan dimuat di sini -->
-            </div>
+            <div class="border p-3" id="strukContent"></div>
             <button class="btn btn-success mt-3" onclick="window.print()"><i class="fas fa-print"></i> Cetak Struk</button>
         </div>
     </div>
@@ -84,6 +82,27 @@
         const transaksiList = JSON.parse(localStorage.getItem("transaksi")) || [];
 
         const generateIDTransaksi = () => `TRX-${new Date().getTime()}`;
+
+        const renderSelectOptions = (selectId, dataList, defaultText) => {
+            const select = document.getElementById(selectId);
+            select.innerHTML = `<option value="" disabled selected>${defaultText}</option>`;
+            dataList.forEach(data => {
+                const option = document.createElement("option");
+                option.value = data.id;
+                option.textContent = data.nama;
+                select.appendChild(option);
+            });
+        };
+
+        const handleProdukChange = () => {
+            const produkId = document.getElementById("produkId").value;
+            const produk = produkList.find(prod => prod.id === produkId);
+            if (produk) {
+                document.getElementById("produkInfo").classList.remove("d-none");
+                document.getElementById("produkHarga").textContent = `Rp ${produk.harga.toLocaleString()}`;
+                document.getElementById("produkStok").textContent = produk.stok;
+            }
+        };
 
         const updateTotalHarga = () => {
             const produkId = document.getElementById("produkId").value;
@@ -96,17 +115,6 @@
                 total -= (total * diskon) / 100;
                 document.getElementById("totalHarga").value = `Rp ${total.toLocaleString()}`;
             }
-        };
-
-        const renderSelectOptions = (selectId, dataList, defaultText) => {
-            const select = document.getElementById(selectId);
-            select.innerHTML = `<option value="" disabled selected>${defaultText}</option>`;
-            dataList.forEach(data => {
-                const option = document.createElement("option");
-                option.value = data.id;
-                option.textContent = data.nama;
-                select.appendChild(option);
-            });
         };
 
         const handlePelangganJenisChange = () => {
@@ -181,7 +189,7 @@
 
         document.getElementById("formTransaksi").addEventListener("submit", konfirmasiPembayaran);
         document.getElementById("pelangganJenis").addEventListener("change", handlePelangganJenisChange);
-        document.getElementById("produkId").addEventListener("change", updateTotalHarga);
+        document.getElementById("produkId").addEventListener("change", handleProdukChange);
         document.getElementById("jumlahProduk").addEventListener("input", updateTotalHarga);
         document.getElementById("diskon").addEventListener("input", updateTotalHarga);
 
