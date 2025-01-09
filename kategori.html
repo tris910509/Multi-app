@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Kategori</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .table th, .table td {
+            text-align: center;
+        }
+        .table td button {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        validateAccess("kategori");
+    </script>
+
+    <!-- Navbar diambil dari script di halaman sebelumnya -->
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4"><i class="fas fa-list"></i> Manajemen Kategori</h2>
+        
+        <!-- Form untuk Tambah/Edit Kategori -->
+        <div id="kategoriFormContainer" class="mb-4">
+            <form id="kategoriForm">
+                <input type="hidden" id="kategoriId" />
+                <div class="mb-3">
+                    <label for="kategoriNama" class="form-label">Nama Kategori</label>
+                    <input type="text" class="form-control" id="kategoriNama" required>
+                </div>
+                <button type="submit" class="btn btn-success w-100" id="submitButton">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
+            </form>
+        </div>
+
+        <!-- Tabel Daftar Kategori -->
+        <table class="table table-striped" id="kategoriTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Daftar kategori akan dimuat di sini -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const kategoriList = JSON.parse(localStorage.getItem("kategori")) || [];
+        
+        // Fungsi untuk membuat ID unik
+        const generateUniqueId = () => {
+            const timestamp = new Date().getTime();
+            const randomNumber = Math.floor(Math.random() * 10000); // Angka acak untuk memastikan ID unik
+            return `K-${timestamp}-${randomNumber}`;
+        };
+
+        // Fungsi untuk menampilkan daftar kategori
+        const renderKategori = () => {
+            const kategoriTable = document.getElementById("kategoriTable").getElementsByTagName('tbody')[0];
+            kategoriTable.innerHTML = "";
+            kategoriList.forEach(kategori => {
+                let row = kategoriTable.insertRow();
+                row.insertCell(0).innerText = kategori.id;
+                row.insertCell(1).innerText = kategori.nama;
+
+                let editButton = document.createElement("button");
+                editButton.classList.add("btn", "btn-warning", "me-2");
+                editButton.innerHTML = '<i class="fas fa-edit"></i> Edit';
+                editButton.onclick = () => editKategori(kategori.id);
+                row.insertCell(2).appendChild(editButton);
+
+                let deleteButton = document.createElement("button");
+                deleteButton.classList.add("btn", "btn-danger");
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i> Hapus';
+                deleteButton.onclick = () => deleteKategori(kategori.id);
+                row.insertCell(2).appendChild(deleteButton);
+            });
+        };
+
+        // Fungsi untuk menghapus kategori
+        const deleteKategori = (id) => {
+            const index = kategoriList.findIndex(k => k.id === id);
+            if (index !== -1) {
+                kategoriList.splice(index, 1);
+                localStorage.setItem("kategori", JSON.stringify(kategoriList));
+                renderKategori();
+            }
+        };
+
+        // Fungsi untuk mengedit kategori
+        const editKategori = (id) => {
+            const kategori = kategoriList.find(k => k.id === id);
+            if (kategori) {
+                document.getElementById("kategoriId").value = kategori.id;
+                document.getElementById("kategoriNama").value = kategori.nama;
+                document.getElementById("submitButton").innerHTML = '<i class="fas fa-pen"></i> Edit Kategori';
+            }
+        };
+
+        // Fungsi untuk menyimpan kategori baru atau mengupdate kategori yang ada
+        const saveKategori = (e) => {
+            e.preventDefault();
+            
+            const kategoriId = document.getElementById("kategoriId").value;
+            const kategoriNama = document.getElementById("kategoriNama").value.trim();
+
+            if (kategoriId) {
+                // Update kategori
+                const kategoriIndex = kategoriList.findIndex(k => k.id === kategoriId);
+                if (kategoriIndex !== -1) {
+                    kategoriList[kategoriIndex] = { id: kategoriId, nama: kategoriNama };
+                }
+            } else {
+                // Tambah kategori baru dengan ID unik
+                const newKategori = {
+                    id: generateUniqueId(),
+                    nama: kategoriNama
+                };
+                kategoriList.push(newKategori);
+            }
+
+            localStorage.setItem("kategori", JSON.stringify(kategoriList));
+            renderKategori();
+            resetForm();
+        };
+
+        // Fungsi untuk mereset form
+        const resetForm = () => {
+            document.getElementById("kategoriForm").reset();
+            document.getElementById("kategoriId").value = "";
+            document.getElementById("submitButton").innerHTML = '<i class="fas fa-save"></i> Simpan';
+        };
+
+        document.getElementById("kategoriForm").addEventListener("submit", saveKategori);
+
+        renderKategori();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
