@@ -13,11 +13,31 @@
         .container {
             max-width: 1000px;
         }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+        }
+        .alert-custom {
+            display: none;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
         <h2 class="text-center mb-4"><i class="fas fa-cash-register"></i> Halaman Transaksi</h2>
+
+        <!-- Notifikasi Error / Sukses -->
+        <div class="alert alert-danger alert-custom" id="errorAlert">
+            <strong>Oops!</strong> Terjadi kesalahan, harap periksa kembali input Anda.
+        </div>
+        <div class="alert alert-success alert-custom" id="successAlert">
+            <strong>Transaksi berhasil!</strong> Pembayaran telah dikonfirmasi.
+        </div>
 
         <!-- Form Transaksi -->
         <form id="formTransaksi">
@@ -35,17 +55,17 @@
             </div>
             <div id="manualInput" class="mb-3">
                 <label for="pelangganUmum" class="form-label">Nama Pelanggan</label>
-                <input type="text" class="form-control" id="pelangganUmum" placeholder="Masukkan nama pelanggan umum">
+                <input type="text" class="form-control" id="pelangganUmum" placeholder="Masukkan nama pelanggan umum" required>
             </div>
             <div id="memberSelect" class="mb-3 d-none">
                 <label for="pelangganMember" class="form-label">Pilih Member</label>
-                <select class="form-select" id="pelangganMember">
+                <select class="form-select" id="pelangganMember" required>
                     <!-- Data member akan dimuat di sini -->
                 </select>
             </div>
             <div class="mb-3">
                 <label for="produkId" class="form-label">Pilih Produk</label>
-                <select class="form-select" id="produkId">
+                <select class="form-select" id="produkId" required>
                     <!-- Data produk akan dimuat di sini -->
                 </select>
             </div>
@@ -53,28 +73,21 @@
                 <label for="jumlahProduk" class="form-label">Jumlah</label>
                 <input type="number" class="form-control" id="jumlahProduk" min="1" value="1" required>
             </div>
-            <div class="mb-3">
-                <label for="totalHarga" class="form-label">Total Harga</label>
-                <input type="text" class="form-control" id="totalHarga" disabled>
-            </div>
-            <div class="mb-3">
-                <label for="diskon" class="form-label">Diskon (%)</label>
-                <input type="number" class="form-control" id="diskon" min="0" max="100" value="0">
-            </div>
-            <div class="mb-3">
-                <label for="bayar" class="form-label">Pembayaran</label>
-                <input type="number" class="form-control" id="bayar" min="0" required>
-            </div>
-            <div class="mb-3">
-                <label for="metodePembayaran" class="form-label">Metode Pembayaran</label>
-                <select class="form-select" id="metodePembayaran">
-                    <option value="cash" selected>Cash</option>
-                    <option value="transfer">Transfer</option>
-                    <option value="credit">Credit</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-check-circle"></i> Konfirmasi Pembayaran</button>
+            <button type="button" class="btn btn-primary" id="tambahKeKeranjang"><i class="fas fa-cart-plus"></i> Tambah ke Keranjang</button>
         </form>
+
+        <!-- Keranjang -->
+        <div id="keranjang" class="mt-4">
+            <h5>Keranjang Belanja</h5>
+            <div id="cartItems"></div>
+            <hr>
+            <div class="d-flex justify-content-between">
+                <h6>Subtotal: <span id="subtotal">Rp 0</span></h6>
+                <h6>Total Harga: <span id="totalHarga">Rp 0</span></h6>
+            </div>
+            <button class="btn btn-danger w-100" id="batalkanTransaksi"><i class="fas fa-trash"></i> Batalkan Transaksi</button>
+            <button class="btn btn-success w-100 mt-3" id="konfirmasiPembayaran"><i class="fas fa-check-circle"></i> Konfirmasi Pembayaran</button>
+        </div>
 
         <!-- Struk -->
         <div id="strukTransaksi" class="mt-5 d-none">
@@ -91,41 +104,68 @@
         const memberList = JSON.parse(localStorage.getItem("pelanggan")) || [];
         const transaksiList = JSON.parse(localStorage.getItem("transaksi")) || [];
 
+        let keranjang = [];
+
         const generateIDTransaksi = () => `TRX-${new Date().getTime()}`;
 
-        const updateTotalHarga = () => {
-            const produkId = document.getElementById("produkId").value;
-            const jumlah = parseInt(document.getElementById("jumlahProduk").value) || 0;
-            const diskon = parseInt(document.getElementById("diskon").value) || 0;
+        const renderKeranjang = () => {
+            const cartItemsContainer = document.getElementById("cartItems");
+            cartItemsContainer.innerHTML = "";
 
-            const produk = produkList.find(prod => prod.id === produkId);
-            if (produk) {
-                let total = produk.harga * jumlah;
-                total -= (total * diskon) / 100;
-                document.getElementById("totalHarga").value = `Rp ${total.toLocaleString()}`;
-            }
-        };
-
-        const renderSelectOptions = (selectId, dataList, defaultText) => {
-            const select = document.getElementById(selectId);
-            select.innerHTML = `<option value="" disabled selected>${defaultText}</option>`;
-            dataList.forEach(data => {
-                const option = document.createElement("option");
-                option.value = data.id;
-                option.textContent = data.nama;
-                select.appendChild(option);
+            let subtotal = 0;
+            keranjang.forEach(item => {
+                const div = document.createElement("div");
+                div.classList.add("cart-item");
+                div.innerHTML = `
+                    <span>${item.namaProduk} (x${item.jumlah})</span>
+                    <span>Rp ${item.totalHarga.toLocaleString()}</span>
+                    <button class="btn btn-danger btn-sm" onclick="hapusDariKeranjang('${item.idProduk}')"><i class="fas fa-trash"></i></button>
+                `;
+                cartItemsContainer.appendChild(div);
+                subtotal += item.totalHarga;
             });
+
+            document.getElementById("subtotal").textContent = `Rp ${subtotal.toLocaleString()}`;
+            document.getElementById("totalHarga").textContent = `Rp ${subtotal.toLocaleString()}`;
         };
 
-        const handlePelangganJenisChange = () => {
-            const pelangganJenis = document.getElementById("pelangganJenis").value;
-            document.getElementById("manualInput").classList.toggle("d-none", pelangganJenis !== "umum");
-            document.getElementById("memberSelect").classList.toggle("d-none", pelangganJenis !== "member");
+        const tambahKeKeranjang = () => {
+            const produkId = document.getElementById("produkId").value;
+            const jumlah = parseInt(document.getElementById("jumlahProduk").value) || 1;
+            const produk = produkList.find(p => p.id === produkId);
+
+            if (!produk) {
+                showError("Produk tidak ditemukan");
+                return;
+            }
+
+            if (jumlah > produk.stok) {
+                showError("Jumlah melebihi stok yang tersedia");
+                return;
+            }
+
+            const totalHarga = produk.harga * jumlah;
+            keranjang.push({
+                idProduk: produk.id,
+                namaProduk: produk.nama,
+                harga: produk.harga,
+                jumlah,
+                totalHarga
+            });
+            renderKeranjang();
         };
 
-        const konfirmasiPembayaran = (event) => {
-            event.preventDefault();
+        const hapusDariKeranjang = (idProduk) => {
+            keranjang = keranjang.filter(item => item.idProduk !== idProduk);
+            renderKeranjang();
+        };
 
+        const batalkanTransaksi = () => {
+            keranjang = [];
+            renderKeranjang();
+        };
+
+        const konfirmasiPembayaran = () => {
             const idTransaksi = document.getElementById("idTransaksi").value;
             const pelangganJenis = document.getElementById("pelangganJenis").value;
             const pelangganNama =
@@ -133,47 +173,44 @@
                     ? document.getElementById("pelangganUmum").value
                     : document.getElementById("pelangganMember").selectedOptions[0].text;
 
-            const produkId = document.getElementById("produkId").value;
-            const produk = produkList.find(prod => prod.id === produkId);
-            const jumlah = parseInt(document.getElementById("jumlahProduk").value) || 0;
-            const diskon = parseInt(document.getElementById("diskon").value) || 0;
-            const bayar = parseInt(document.getElementById("bayar").value) || 0;
-            const metodePembayaran = document.getElementById("metodePembayaran").value;
-
-            if (produk && bayar > 0) {
-                const totalHarga = produk.harga * jumlah - (produk.harga * jumlah * diskon) / 100;
-                if (bayar >= totalHarga) {
-                    transaksiList.push({
-                        id: idTransaksi,
-                        pelanggan: pelangganNama,
-                        produk: produk.nama,
-                        jumlah,
-                        totalHarga,
-                        bayar,
-                        kembalian: bayar - totalHarga,
-                        metodePembayaran
-                    });
-
-                    localStorage.setItem("transaksi", JSON.stringify(transaksiList));
-                    tampilkanStruk({
-                        id: idTransaksi,
-                        pelanggan: pelangganNama,
-                        produk: produk.nama,
-                        jumlah,
-                        totalHarga,
-                        bayar,
-                        kembalian: bayar - totalHarga,
-                        metodePembayaran
-                    });
-
-                    document.getElementById("formTransaksi").reset();
-                    document.getElementById("idTransaksi").value = generateIDTransaksi();
-                } else {
-                    alert("Uang yang dibayarkan kurang!");
-                }
-            } else {
-                alert("Lengkapi semua input dengan benar!");
+            if (keranjang.length === 0) {
+                showError("Keranjang belanja kosong!");
+                return;
             }
+
+            if (pelangganNama === "") {
+                showError("Nama pelanggan tidak boleh kosong!");
+                return;
+            }
+
+            const totalHarga = keranjang.reduce((total, item) => total + item.totalHarga, 0);
+
+            transaksiList.push({
+                id: idTransaksi,
+                pelanggan: pelangganNama,
+                produk: keranjang.map(item => item.namaProduk).join(", "),
+                jumlah: keranjang.reduce((total, item) => total + item.jumlah, 0),
+                totalHarga,
+                metodePembayaran: document.getElementById("metodePembayaran").value
+            });
+
+            localStorage.setItem("transaksi", JSON.stringify(transaksiList));
+
+            showSuccess("Transaksi berhasil dilakukan!");
+            tampilkanStruk({
+                id: idTransaksi,
+                pelanggan: pelangganNama,
+                produk: keranjang.map(item => item.namaProduk).join(", "),
+                jumlah: keranjang.reduce((total, item) => total + item.jumlah, 0),
+                totalHarga,
+                metodePembayaran: document.getElementById("metodePembayaran").value
+            });
+
+            // Reset form dan keranjang
+            document.getElementById("formTransaksi").reset();
+            document.getElementById("idTransaksi").value = generateIDTransaksi();
+            keranjang = [];
+            renderKeranjang();
         };
 
         const tampilkanStruk = (transaksi) => {
@@ -184,23 +221,34 @@
                 <p><strong>Produk:</strong> ${transaksi.produk}</p>
                 <p><strong>Jumlah:</strong> ${transaksi.jumlah}</p>
                 <p><strong>Total Harga:</strong> Rp ${transaksi.totalHarga.toLocaleString()}</p>
-                <p><strong>Bayar:</strong> Rp ${transaksi.bayar.toLocaleString()}</p>
-                <p><strong>Kembalian:</strong> Rp ${transaksi.kembalian.toLocaleString()}</p>
                 <p><strong>Metode Pembayaran:</strong> ${transaksi.metodePembayaran}</p>
             `;
             document.getElementById("strukTransaksi").classList.remove("d-none");
         };
 
-        document.getElementById("formTransaksi").addEventListener("submit", konfirmasiPembayaran);
-        document.getElementById("pelangganJenis").addEventListener("change", handlePelangganJenisChange);
-        document.getElementById("produkId").addEventListener("change", updateTotalHarga);
-        document.getElementById("jumlahProduk").addEventListener("input", updateTotalHarga);
-        document.getElementById("diskon").addEventListener("input", updateTotalHarga);
+        const showError = (message) => {
+            const errorAlert = document.getElementById("errorAlert");
+            errorAlert.textContent = message;
+            errorAlert.style.display = "block";
+            setTimeout(() => errorAlert.style.display = "none", 3000);
+        };
+
+        const showSuccess = (message) => {
+            const successAlert = document.getElementById("successAlert");
+            successAlert.textContent = message;
+            successAlert.style.display = "block";
+            setTimeout(() => successAlert.style.display = "none", 3000);
+        };
+
+        document.getElementById("tambahKeKeranjang").addEventListener("click", tambahKeKeranjang);
+        document.getElementById("batalkanTransaksi").addEventListener("click", batalkanTransaksi);
+        document.getElementById("konfirmasiPembayaran").addEventListener("click", konfirmasiPembayaran);
 
         // Inisialisasi
         document.getElementById("idTransaksi").value = generateIDTransaksi();
         renderSelectOptions("produkId", produkList, "Pilih Produk");
         renderSelectOptions("pelangganMember", memberList, "Pilih Member");
+        renderKeranjang();
     </script>
 </body>
 </html>
