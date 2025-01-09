@@ -160,6 +160,11 @@
             if (jenisPelanggan === 'Member') {
                 document.getElementById('inputNamaPelanggan').classList.add('d-none');
                 document.getElementById('selectMemberPelanggan').classList.remove('d-none');
+                const selectedMember = document.getElementById('idMember').value;
+                if (selectedMember) {
+                    const member = pelangganData.find(p => p.id === selectedMember);
+                    document.getElementById('namaPelanggan').value = member ? member.nama : '';
+                }
             } else {
                 document.getElementById('inputNamaPelanggan').classList.remove('d-none');
                 document.getElementById('selectMemberPelanggan').classList.add('d-none');
