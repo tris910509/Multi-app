@@ -13,254 +13,282 @@
         .container {
             max-width: 1200px;
         }
-        .keranjang-table td, .keranjang-table th {
+        .table th, .table td {
             vertical-align: middle;
+        }
+        .form-control:disabled {
+            background-color: #e9ecef;
         }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center mb-4"><i class="fas fa-cart-plus"></i> Halaman Transaksi</h2>
+        <h2 class="text-center mb-4"><i class="fas fa-shopping-cart"></i> Form Transaksi</h2>
 
         <!-- Form Transaksi -->
-        <div class="card mb-3">
+        <div class="card">
             <div class="card-header"><strong>Form Transaksi</strong></div>
             <div class="card-body">
                 <form id="formTransaksi">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="idTransaksi" class="form-label">ID Transaksi</label>
-                            <input type="text" class="form-control" id="idTransaksi" disabled>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="jenisPelanggan" class="form-label">Jenis Pelanggan</label>
-                            <select class="form-select" id="jenisPelanggan">
-                                <option value="Umum">Umum</option>
-                                <option value="Member">Member</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 d-none" id="inputNamaPelanggan">
-                            <label for="namaPelanggan" class="form-label">Nama Pelanggan</label>
-                            <input type="text" class="form-control" id="namaPelanggan" placeholder="Masukkan nama pelanggan">
-                        </div>
-                        <div class="col-md-6 d-none" id="selectMemberPelanggan">
-                            <label for="idMember" class="form-label">Pilih Member</label>
-                            <select class="form-select" id="idMember">
-                                <!-- Data member dimuat di sini -->
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="produkId" class="form-label">Pilih Produk</label>
-                            <select class="form-select" id="produkId">
-                                <!-- Data produk dimuat di sini -->
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="jumlahProduk" class="form-label">Jumlah</label>
-                            <input type="number" class="form-control" id="jumlahProduk" placeholder="Masukkan jumlah" min="1">
-                        </div>
+                    <!-- ID Transaksi -->
+                    <div class="mb-3">
+                        <label for="idTransaksi" class="form-label">ID Transaksi</label>
+                        <input type="text" class="form-control" id="idTransaksi" value="TRX-{{Date.now()}}" disabled>
                     </div>
-                    <button type="button" class="btn btn-primary mt-3" id="btnTambahKeranjang">
-                        <i class="fas fa-plus"></i> Tambah ke Keranjang
-                    </button>
+
+                    <!-- Jenis Pelanggan -->
+                    <div class="mb-3">
+                        <label for="jenisPelanggan" class="form-label">Jenis Pelanggan</label>
+                        <select class="form-select" id="jenisPelanggan" onchange="ubahJenisPelanggan()">
+                            <option value="umum">Umum</option>
+                            <option value="member">Member</option>
+                        </select>
+                    </div>
+
+                    <!-- Nama Pelanggan -->
+                    <div class="mb-3">
+                        <label for="namaPelanggan" class="form-label">Nama Pelanggan</label>
+                        <input type="text" class="form-control" id="namaPelanggan" disabled>
+                    </div>
+
+                    <!-- Form Keranjang -->
+                    <div class="mb-3">
+                        <label for="produk" class="form-label">Produk</label>
+                        <select class="form-select" id="produk">
+                            <option value="">Pilih Produk</option>
+                            <!-- Produk diisi dengan data -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="jumlah" class="form-label">Jumlah</label>
+                        <input type="number" class="form-control" id="jumlah" min="1" value="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="diskon" class="form-label">Diskon (Rp)</label>
+                        <input type="number" class="form-control" id="diskon" min="0" value="0">
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-primary" id="btnTambahKeranjang">Tambah ke Keranjang</button>
+                    </div>
+
+                    <!-- Keranjang -->
+                    <h5>Keranjang</h5>
+                    <table class="table table-bordered" id="keranjang">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Nama Produk</th>
+                                <th>Item</th>
+                                <th>Harga</th>
+                                <th>Diskon</th>
+                                <th>Jumlah</th>
+                                <th>Total</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keranjangItems"></tbody>
+                    </table>
+
+                    <div class="mb-3">
+                        <label for="totalBelanja" class="form-label">Total Belanja</label>
+                        <input type="text" class="form-control" id="totalBelanja" disabled>
+                    </div>
+
+                    <!-- Form Pembayaran -->
+                    <h5>Pembayaran</h5>
+                    <div class="mb-3">
+                        <label for="totalBayar" class="form-label">Total yang Harus Dibayar</label>
+                        <input type="text" class="form-control" id="totalBayar" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="jumlahBayar" class="form-label">Jumlah Pembayaran</label>
+                        <input type="number" class="form-control" id="jumlahBayar">
+                    </div>
+                    <div class="mb-3">
+                        <label for="kembalian" class="form-label">Kembalian</label>
+                        <input type="text" class="form-control" id="kembalian" disabled>
+                    </div>
+
+                    <!-- Status Pembayaran -->
+                    <div class="mb-3">
+                        <label for="statusPembayaran" class="form-label">Status Pembayaran</label>
+                        <input type="text" class="form-control" id="statusPembayaran" disabled>
+                    </div>
+
+                    <!-- Metode Pembayaran -->
+                    <div class="mb-3">
+                        <label for="metodePembayaran" class="form-label">Metode Pembayaran</label>
+                        <select class="form-select" id="metodePembayaran">
+                            <option value="cash">Cash</option>
+                            <option value="transfer">Transfer (QR / E-wallet)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="buktiPembayaran" style="display:none;">
+                        <label for="bukti" class="form-label">Bukti Pembayaran</label>
+                        <input type="file" class="form-control" id="bukti">
+                    </div>
+
+                    <!-- Simpan dan Konfirmasi -->
+                    <button type="button" class="btn btn-success" id="btnSimpanTransaksi">Simpan Transaksi</button>
                 </form>
             </div>
         </div>
 
-        <!-- Keranjang -->
-        <div class="card mb-3">
-            <div class="card-header"><strong>Keranjang</strong></div>
-            <div class="card-body">
-                <table class="table table-bordered keranjang-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Nama Produk</th>
-                            <th>Item</th>
-                            <th>Harga</th>
-                            <th>Diskon (Rp / %)</th>
-                            <th>Jumlah</th>
-                            <th>Total</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="keranjangTable">
-                        <!-- Data keranjang dimuat di sini -->
-                    </tbody>
-                </table>
-                <p class="text-end"><strong>Total Belanja: <span id="totalBelanja">Rp 0</span></strong></p>
-
-                <!-- Potongan Harga -->
-                <div class="d-flex justify-content-end">
-                    <label class="form-check-label" for="potonganHarga">
-                        <input type="checkbox" class="form-check-input" id="potonganHarga"> Potongan Harga
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pembayaran -->
-        <div class="card">
-            <div class="card-header"><strong>Pembayaran</strong></div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="diskon" class="form-label">Diskon (%)</label>
-                        <input type="number" class="form-control" id="diskon" placeholder="Masukkan diskon" min="0">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="metodePembayaran" class="form-label">Metode Pembayaran</label>
-                        <select class="form-select" id="metodePembayaran">
-                            <option value="Tunai">Tunai</option>
-                            <option value="Transfer">Transfer</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="bayar" class="form-label">Bayar</label>
-                        <input type="number" class="form-control" id="bayar" placeholder="Masukkan jumlah bayar" min="0">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="kembalian" class="form-label">Kembalian</label>
-                        <input type="text" class="form-control" id="kembalian" disabled>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-success mt-3" id="btnSelesaiTransaksi">
-                    <i class="fas fa-check"></i> Selesaikan Transaksi
-                </button>
-            </div>
-        </div>
+        <!-- Riwayat Transaksi -->
+        <h3 class="mt-5">Riwayat Transaksi</h3>
+        <table class="table table-bordered" id="riwayatTransaksi">
+            <thead>
+                <tr>
+                    <th>ID Transaksi</th>
+                    <th>Nama Produk</th>
+                    <th>Total Pembayaran</th>
+                    <th>Status Pembayaran</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="riwayatTransaksiBody"></tbody>
+        </table>
     </div>
 
     <script>
-        // Inisialisasi data pelanggan dan produk
-        const pelangganData = JSON.parse(localStorage.getItem('pelanggan')) || [];
-        const produkData = JSON.parse(localStorage.getItem('produk')) || [];
+        // Dummy data produk dan pelanggan
+        const produkData = [
+            { id: 1, nama: 'Produk A', harga: 50000 },
+            { id: 2, nama: 'Produk B', harga: 75000 },
+            { id: 3, nama: 'Produk C', harga: 100000 }
+        ];
+
+        const pelangganData = [
+            { id: 1, nama: 'John Doe', jenis: 'member' },
+            { id: 2, nama: 'Jane Smith', jenis: 'umum' }
+        ];
+
         let keranjang = [];
+        let totalBelanja = 0;
 
-        // Fungsi untuk menghasilkan ID Transaksi
-        const generateIdTransaksi = () => 'TRX' + Date.now();
-
-        // Fungsi untuk menampilkan produk di dropdown
+        // Menampilkan produk
         const tampilkanProduk = () => {
-            const produkSelect = document.getElementById('produkId');
-            produkSelect.innerHTML = '';
-            produkData.forEach(produk => {
+            const produkSelect = document.getElementById('produk');
+            produkData.forEach(p => {
                 const option = document.createElement('option');
-                option.value = produk.id;
-                option.textContent = `${produk.nama} - Rp ${produk.harga}`;
+                option.value = p.id;
+                option.textContent = p.nama;
                 produkSelect.appendChild(option);
             });
         };
 
-        // Fungsi untuk menampilkan data pelanggan member di dropdown
-        const tampilkanMember = () => {
-            const memberSelect = document.getElementById('idMember');
-            memberSelect.innerHTML = '';
-            pelangganData
-                .filter(p => p.peran === 'Member')
-                .forEach(member => {
-                    const option = document.createElement('option');
-                    option.value = member.id;
-                    option.textContent = `${member.nama}`;
-                    memberSelect.appendChild(option);
-                });
-        };
-
-        // Fungsi untuk mengelola input pelanggan berdasarkan jenis pelanggan
-        const ubahJenisPelanggan = () => {
-            const jenisPelanggan = document.getElementById('jenisPelanggan').value;
-            if (jenisPelanggan === 'Member') {
-                document.getElementById('inputNamaPelanggan').classList.add('d-none');
-                document.getElementById('selectMemberPelanggan').classList.remove('d-none');
-                const selectedMember = document.getElementById('idMember').value;
-                if (selectedMember) {
-                    const member = pelangganData.find(p => p.id === selectedMember);
-                    document.getElementById('namaPelanggan').value = member ? member.nama : '';
-                }
-            } else {
-                document.getElementById('inputNamaPelanggan').classList.remove('d-none');
-                document.getElementById('selectMemberPelanggan').classList.add('d-none');
+        // Menampilkan pelanggan berdasarkan ID
+        const tampilkanPelanggan = (id) => {
+            const pelanggan = pelangganData.find(p => p.id === id);
+            if (pelanggan) {
+                document.getElementById('namaPelanggan').value = pelanggan.nama;
             }
         };
 
-        // Fungsi untuk menambahkan produk ke keranjang
+        // Menambahkan item ke keranjang
         const tambahKeKeranjang = () => {
-            const produkId = document.getElementById('produkId').value;
-            const jumlah = parseInt(document.getElementById('jumlahProduk').value);
-            const diskon = parseFloat(document.getElementById('diskon').value) || 0;
+            const produkId = document.getElementById('produk').value;
+            const produk = produkData.find(p => p.id == produkId);
+            const jumlah = parseInt(document.getElementById('jumlah').value);
+            const diskon = parseInt(document.getElementById('diskon').value);
 
-            const produk = produkData.find(p => p.id === produkId);
-            if (!produk) return alert('Produk tidak ditemukan');
-            if (jumlah > produk.stok) return alert('Stok tidak mencukupi');
+            if (produk) {
+                const total = (produk.harga * jumlah) - diskon;
+                keranjang.push({ produk, jumlah, diskon, total });
 
-            keranjang.push({
-                ...produk,
-                jumlah,
-                diskon,
-                subtotal: (produk.harga * jumlah) - diskon
-            });
-
-            tampilkanKeranjang();
+                totalBelanja += total;
+                document.getElementById('totalBelanja').value = `Rp ${totalBelanja}`;
+                tampilkanKeranjang();
+            }
         };
 
-        // Fungsi untuk menampilkan keranjang
+        // Menampilkan keranjang
         const tampilkanKeranjang = () => {
-            const keranjangTable = document.querySelector('#keranjangTable');
+            const keranjangTable = document.getElementById('keranjangItems');
             keranjangTable.innerHTML = '';
-            let total = 0;
             keranjang.forEach((item, index) => {
-                total += item.subtotal;
                 keranjangTable.innerHTML += `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${item.nama}</td>
-                        <td>${item.item}</td>
-                        <td>Rp ${item.harga}</td>
-                        <td>
-                            <input type="number" class="form-control" value="${item.diskon}" onchange="updateDiskon(${index}, this.value)">
-                        </td>
-                        <td>
-                            <input type="number" class="form-control" value="${item.jumlah}" onchange="updateJumlah(${index}, this.value)">
-                        </td>
-                        <td>Rp ${item.subtotal}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="hapusDariKeranjang(${index})">
-                                <i class="fas fa-trash"></i> Hapus
-                            </button>
-                        </td>
-                    </tr>`;
+                        <td>${item.produk.nama}</td>
+                        <td>${item.jumlah}</td>
+                        <td>Rp ${item.produk.harga}</td>
+                        <td>Rp ${item.diskon}</td>
+                        <td>${item.jumlah}</td>
+                        <td>Rp ${item.total}</td>
+                        <td><button class="btn btn-danger btn-sm" onclick="hapusItemKeranjang(${index})">Hapus</button></td>
+                    </tr>
+                `;
             });
-
-            document.getElementById('totalBelanja').textContent = `Rp ${total}`;
         };
 
-        // Fungsi untuk menghapus item dari keranjang
-        const hapusDariKeranjang = index => {
+        // Menghapus item dari keranjang
+        const hapusItemKeranjang = (index) => {
+            totalBelanja -= keranjang[index].total;
+            document.getElementById('totalBelanja').value = `Rp ${totalBelanja}`;
             keranjang.splice(index, 1);
             tampilkanKeranjang();
         };
 
-        // Fungsi untuk memperbarui diskon item
-        const updateDiskon = (index, value) => {
-            keranjang[index].diskon = parseFloat(value);
-            keranjang[index].subtotal = (keranjang[index].harga * keranjang[index].jumlah) - keranjang[index].diskon;
-            tampilkanKeranjang();
+        // Menangani pembayaran dan status
+        const konfirmasiPembayaran = () => {
+            const metode = document.getElementById('metodePembayaran').value;
+            const jumlahBayar = parseInt(document.getElementById('jumlahBayar').value);
+            const totalBayar = totalBelanja;
+
+            if (metode === 'cash') {
+                const kembalian = jumlahBayar - totalBayar;
+                document.getElementById('kembalian').value = `Rp ${kembalian}`;
+                document.getElementById('statusPembayaran').value = (kembalian >= 0) ? 'Lunas' : 'Belum Lunas';
+            } else if (metode === 'transfer') {
+                document.getElementById('buktiPembayaran').style.display = 'block';
+            }
         };
 
-        // Fungsi untuk memperbarui jumlah item
-        const updateJumlah = (index, value) => {
-            keranjang[index].jumlah = parseInt(value);
-            keranjang[index].subtotal = (keranjang[index].harga * keranjang[index].jumlah) - keranjang[index].diskon;
-            tampilkanKeranjang();
+        // Menyimpan transaksi
+        const simpanTransaksi = () => {
+            const transaksi = {
+                idTransaksi: document.getElementById('idTransaksi').value,
+                produk: keranjang,
+                totalPembayaran: totalBelanja,
+                statusPembayaran: document.getElementById('statusPembayaran').value
+            };
+
+            // Simpan transaksi ke localStorage atau ke database sesuai kebutuhan
+            let transaksiHistory = JSON.parse(localStorage.getItem('transaksiHistory')) || [];
+            transaksiHistory.push(transaksi);
+            localStorage.setItem('transaksiHistory', JSON.stringify(transaksiHistory));
+
+            alert('Transaksi berhasil disimpan!');
+            tampilkanRiwayatTransaksi();
         };
 
-        // Event Listener untuk tombol tambah keranjang
-        document.getElementById('btnTambahKeranjang').addEventListener('click', tambahKeKeranjang);
-        
-        // Inisialisasi tampilan produk dan member
+        // Menampilkan riwayat transaksi
+        const tampilkanRiwayatTransaksi = () => {
+            const riwayatTransaksiTable = document.getElementById('riwayatTransaksiBody');
+            const transaksiHistory = JSON.parse(localStorage.getItem('transaksiHistory')) || [];
+            riwayatTransaksiTable.innerHTML = '';
+            transaksiHistory.forEach(transaksi => {
+                riwayatTransaksiTable.innerHTML += `
+                    <tr>
+                        <td>${transaksi.idTransaksi}</td>
+                        <td>${transaksi.produk.map(p => p.produk.nama).join(', ')}</td>
+                        <td>Rp ${transaksi.totalPembayaran}</td>
+                        <td>${transaksi.statusPembayaran}</td>
+                        <td><button class="btn btn-info btn-sm">Detail</button></td>
+                    </tr>
+                `;
+            });
+        };
+
+        // Inisialisasi data produk dan pelanggan
         tampilkanProduk();
-        tampilkanMember();
-        ubahJenisPelanggan();
+        tampilkanRiwayatTransaksi();
+
+        document.getElementById('btnTambahKeranjang').addEventListener('click', tambahKeKeranjang);
+        document.getElementById('btnSimpanTransaksi').addEventListener('click', simpanTransaksi);
+        document.getElementById('metodePembayaran').addEventListener('change', konfirmasiPembayaran);
+
     </script>
 </body>
 </html>
