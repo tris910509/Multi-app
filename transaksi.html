@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Transaksi</title>
+    <title>Halaman Transaksi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,316 +11,183 @@
             background-color: #f8f9fa;
         }
         .container {
-            max-width: 900px;
+            max-width: 1000px;
         }
-        .table th, .table td {
-            text-align: center;
-        }
-        .table td button {
-            width: 100px;
-        }
-        .struk-container {
-            display: none;
-            background-color: #fff;
-            border: 2px solid #ddd;
-            padding: 20px;
-            margin-top: 20px;
+        .modal-lg {
+            max-width: 90% !important;
         }
     </style>
 </head>
 <body>
-    <script>
-        validateAccess("transaksi");
-    </script>
-
-    <!-- Navbar diambil dari script di halaman sebelumnya -->
-
     <div class="container mt-5">
-        <h2 class="text-center mb-4"><i class="fas fa-cart-plus"></i> Manajemen Transaksi</h2>
+        <h2 class="text-center mb-4"><i class="fas fa-cash-register"></i> Halaman Transaksi</h2>
 
-        <!-- Pilihan Jenis Pelanggan (Umum, Member, Semi) -->
+        <!-- Form Pilih Jenis Transaksi -->
         <div class="mb-4">
-            <label for="jenisPelanggan" class="form-label">Pilih Jenis Pelanggan</label>
-            <select class="form-control" id="jenisPelanggan">
+            <label for="transaksiJenis" class="form-label">Jenis Transaksi</label>
+            <select class="form-select" id="transaksiJenis">
                 <option value="umum">Umum</option>
                 <option value="member">Member</option>
-                <option value="semi">Semi</option>
             </select>
         </div>
 
-        <!-- Form Transaksi Umum (Input Manual) -->
-        <div id="formTransaksiUmum">
-            <form id="transaksiForm">
-                <div class="mb-3">
-                    <label for="transaksiId" class="form-label">ID Transaksi</label>
-                    <input type="text" class="form-control" id="transaksiId" disabled value="TRX-{{randomId}}">
-                </div>
-                <div class="mb-3">
-                    <label for="produkId" class="form-label">Pilih Produk</label>
-                    <select class="form-control" id="produkId" required>
-                        <!-- Opsi produk akan dimuat di sini -->
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="jumlah" class="form-label">Jumlah</label>
-                    <input type="number" class="form-control" id="jumlah" required>
-                </div>
-                <div class="mb-3">
-                    <label for="diskon" class="form-label">Diskon (%)</label>
-                    <input type="number" class="form-control" id="diskon" value="0" required>
-                </div>
-                <div class="mb-3">
-                    <label for="total" class="form-label">Total</label>
-                    <input type="number" class="form-control" id="total" disabled>
-                </div>
-                <div class="mb-3">
-                    <label for="bayar" class="form-label">Bayar</label>
-                    <input type="number" class="form-control" id="bayar" required>
-                </div>
-                <div class="mb-3">
-                    <label for="buktiBayar" class="form-label">Bukti Bayar</label>
-                    <input type="file" class="form-control" id="buktiBayar" required>
-                </div>
-                <button type="submit" class="btn btn-success w-100" id="submitButton">
-                    <i class="fas fa-save"></i> Simpan Transaksi
-                </button>
-            </form>
-        </div>
-
-        <!-- Modal untuk transaksi Member -->
-        <div class="modal fade" id="modalTransaksiMember" tabindex="-1" aria-labelledby="modalTransaksiMemberLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalTransaksiMemberLabel">Transaksi Member</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="transaksiMemberForm">
-                            <div class="mb-3">
-                                <label for="memberId" class="form-label">ID Member</label>
-                                <input type="text" class="form-control" id="memberId" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="produkMember" class="form-label">Produk</label>
-                                <select class="form-control" id="produkMember" required>
-                                    <!-- Opsi produk akan dimuat di sini -->
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="jumlahMember" class="form-label">Jumlah</label>
-                                <input type="number" class="form-control" id="jumlahMember" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="diskonMember" class="form-label">Diskon (%)</label>
-                                <input type="number" class="form-control" id="diskonMember" value="0" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="totalMember" class="form-label">Total</label>
-                                <input type="number" class="form-control" id="totalMember" disabled>
-                            </div>
-                            <button type="submit" class="btn btn-success w-100">
-                                <i class="fas fa-save"></i> Simpan Transaksi Member
-                            </button>
-                        </form>
-                    </div>
-                </div>
+        <!-- Form Input Manual (Umum) -->
+        <form id="formUmum" class="mb-4">
+            <h5>Transaksi Umum</h5>
+            <div class="mb-3">
+                <label for="produkNama" class="form-label">Nama Produk</label>
+                <input type="text" class="form-control" id="produkNamaUmum" placeholder="Masukkan nama produk">
             </div>
-        </div>
-
-        <!-- Modal untuk transaksi Semi -->
-        <div class="modal fade" id="modalTransaksiSemi" tabindex="-1" aria-labelledby="modalTransaksiSemiLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalTransaksiSemiLabel">Transaksi Semi</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="transaksiSemiForm">
-                            <div class="mb-3">
-                                <label for="semiId" class="form-label">ID Semi</label>
-                                <input type="text" class="form-control" id="semiId" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="produkSemi" class="form-label">Produk</label>
-                                <select class="form-control" id="produkSemi" required>
-                                    <!-- Opsi produk akan dimuat di sini -->
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="jumlahSemi" class="form-label">Jumlah</label>
-                                <input type="number" class="form-control" id="jumlahSemi" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="diskonSemi" class="form-label">Diskon (%)</label>
-                                <input type="number" class="form-control" id="diskonSemi" value="0" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="totalSemi" class="form-label">Total</label>
-                                <input type="number" class="form-control" id="totalSemi" disabled>
-                            </div>
-                            <button type="submit" class="btn btn-success w-100">
-                                <i class="fas fa-save"></i> Simpan Transaksi Semi
-                            </button>
-                        </form>
-                    </div>
-                </div>
+            <div class="mb-3">
+                <label for="produkHarga" class="form-label">Harga</label>
+                <input type="number" class="form-control" id="produkHargaUmum" placeholder="Masukkan harga">
             </div>
+            <div class="mb-3">
+                <label for="jumlahProduk" class="form-label">Jumlah</label>
+                <input type="number" class="form-control" id="jumlahProdukUmum" placeholder="Masukkan jumlah">
+            </div>
+            <div class="mb-3">
+                <label for="diskonProduk" class="form-label">Diskon (%)</label>
+                <input type="number" class="form-control" id="diskonProdukUmum" placeholder="Masukkan diskon (jika ada)">
+            </div>
+            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-save"></i> Simpan Transaksi Umum</button>
+        </form>
+
+        <!-- Form Relasi Data (Member) -->
+        <div id="formMember" class="d-none mb-4">
+            <h5>Transaksi Member</h5>
+            <div class="mb-3">
+                <label for="memberId" class="form-label">Pilih Member</label>
+                <select class="form-select" id="memberId">
+                    <!-- Data Member akan dimuat di sini -->
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="produkId" class="form-label">Pilih Produk</label>
+                <select class="form-select" id="produkId">
+                    <!-- Data Produk akan dimuat di sini -->
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="jumlahProdukMember" class="form-label">Jumlah</label>
+                <input type="number" class="form-control" id="jumlahProdukMember" placeholder="Masukkan jumlah">
+            </div>
+            <button class="btn btn-primary w-100" id="tambahTransaksiMember"><i class="fas fa-save"></i> Tambah ke Keranjang</button>
         </div>
 
-        <!-- Tabel Riwayat Transaksi -->
-        <table class="table table-striped mt-5" id="riwayatTransaksiTable">
+        <!-- Tabel Transaksi -->
+        <h5 class="mt-4">Daftar Transaksi</h5>
+        <table class="table table-striped" id="transaksiTable">
             <thead>
                 <tr>
                     <th>ID Transaksi</th>
                     <th>Nama Produk</th>
-                    <th>Item</th>
-                    <th>Stok</th>
+                    <th>Harga</th>
                     <th>Jumlah</th>
-                    <th>Total</th>
                     <th>Diskon</th>
-                    <th>Bayar</th>
-                    <th>Bukti Bayar</th>
-                    <th>Struk</th>
+                    <th>Total</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Daftar transaksi akan dimuat di sini -->
+                <!-- Data transaksi akan dimuat di sini -->
             </tbody>
         </table>
 
-        <!-- Struk Transaksi -->
-        <div class="struk-container" id="strukContainer">
-            <h3>Struk Pembayaran</h3>
-            <div id="strukContent"></div>
-            <button class="btn btn-primary" onclick="window.print()">Print Struk</button>
+        <!-- Total Pembayaran -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <h5>Total Pembayaran: <span id="totalPembayaran">Rp 0</span></h5>
+            <button class="btn btn-success" id="konfirmasiPembayaran"><i class="fas fa-check-circle"></i> Konfirmasi Pembayaran</button>
         </div>
     </div>
 
     <script>
         const transaksiList = JSON.parse(localStorage.getItem("transaksi")) || [];
         const produkList = JSON.parse(localStorage.getItem("produk")) || [];
+        const memberList = JSON.parse(localStorage.getItem("member")) || [];
 
-        // Fungsi untuk membuat ID transaksi unik
-        const generateTransaksiId = () => {
-            const timestamp = new Date().getTime();
-            return `TRX-${timestamp}`;
+        const renderTransaksiTable = () => {
+            const tableBody = document.getElementById("transaksiTable").getElementsByTagName("tbody")[0];
+            tableBody.innerHTML = "";
+            let totalPembayaran = 0;
+
+            transaksiList.forEach((transaksi, index) => {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = transaksi.id;
+                row.insertCell(1).textContent = transaksi.namaProduk;
+                row.insertCell(2).textContent = `Rp ${transaksi.harga}`;
+                row.insertCell(3).textContent = transaksi.jumlah;
+                row.insertCell(4).textContent = `${transaksi.diskon}%`;
+                row.insertCell(5).textContent = `Rp ${transaksi.total}`;
+                totalPembayaran += transaksi.total;
+
+                const aksiCell = row.insertCell(6);
+                const deleteButton = document.createElement("button");
+                deleteButton.className = "btn btn-danger btn-sm";
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteButton.onclick = () => deleteTransaksi(index);
+                aksiCell.appendChild(deleteButton);
+            });
+
+            document.getElementById("totalPembayaran").textContent = `Rp ${totalPembayaran}`;
         };
 
-        // Fungsi untuk menampilkan produk dalam dropdown
-        const renderProdukOptions = (produkId) => {
-            const produkSelect = document.getElementById(produkId);
+        const deleteTransaksi = (index) => {
+            if (confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
+                transaksiList.splice(index, 1);
+                localStorage.setItem("transaksi", JSON.stringify(transaksiList));
+                renderTransaksiTable();
+            }
+        };
+
+        const saveTransaksiUmum = (event) => {
+            event.preventDefault();
+            const id = `TRX-${new Date().getTime()}`;
+            const namaProduk = document.getElementById("produkNamaUmum").value;
+            const harga = parseFloat(document.getElementById("produkHargaUmum").value) || 0;
+            const jumlah = parseInt(document.getElementById("jumlahProdukUmum").value) || 0;
+            const diskon = parseFloat(document.getElementById("diskonProdukUmum").value) || 0;
+            const total = (harga * jumlah) - (harga * jumlah * diskon / 100);
+
+            transaksiList.push({ id, namaProduk, harga, jumlah, diskon, total });
+            localStorage.setItem("transaksi", JSON.stringify(transaksiList));
+            renderTransaksiTable();
+            event.target.reset();
+        };
+
+        const renderProdukOptions = () => {
+            const produkSelect = document.getElementById("produkId");
             produkSelect.innerHTML = "";
             produkList.forEach(produk => {
-                let option = document.createElement("option");
+                const option = document.createElement("option");
                 option.value = produk.id;
-                option.innerText = produk.nama;
+                option.textContent = produk.nama;
                 produkSelect.appendChild(option);
             });
         };
 
-        // Fungsi untuk menampilkan riwayat transaksi
-        const renderRiwayatTransaksi = () => {
-            const riwayatTable = document.getElementById("riwayatTransaksiTable").getElementsByTagName('tbody')[0];
-            riwayatTable.innerHTML = "";
-            transaksiList.forEach(transaksi => {
-                let row = riwayatTable.insertRow();
-                row.insertCell(0).innerText = transaksi.id;
-                row.insertCell(1).innerText = transaksi.produk;
-                row.insertCell(2).innerText = transaksi.item;
-                row.insertCell(3).innerText = transaksi.stok;
-                row.insertCell(4).innerText = transaksi.jumlah;
-                row.insertCell(5).innerText = transaksi.total;
-                row.insertCell(6).innerText = transaksi.diskon;
-                row.insertCell(7).innerText = transaksi.bayar;
-                
-                // Membuat tombol lihat bukti bayar
-                let viewBuktiBayar = document.createElement("button");
-                viewBuktiBayar.classList.add("btn", "btn-info");
-                viewBuktiBayar.innerHTML = '<i class="fas fa-eye"></i> Lihat';
-                viewBuktiBayar.onclick = () => viewBuktiBayar(transaksi.id);
-                row.insertCell(8).appendChild(viewBuktiBayar);
-                
-                // Membuat tombol struk
-                let printStruk = document.createElement("button");
-                printStruk.classList.add("btn", "btn-primary");
-                printStruk.innerHTML = '<i class="fas fa-print"></i> Struk';
-                printStruk.onclick = () => printStruk(transaksi.id);
-                row.insertCell(9).appendChild(printStruk);
-                
-                // Tombol hapus transaksi
-                let deleteButton = document.createElement("button");
-                deleteButton.classList.add("btn", "btn-danger");
-                deleteButton.innerHTML = '<i class="fas fa-trash"></i> Hapus';
-                deleteButton.onclick = () => deleteTransaksi(transaksi.id);
-                row.insertCell(10).appendChild(deleteButton);
+        const renderMemberOptions = () => {
+            const memberSelect = document.getElementById("memberId");
+            memberSelect.innerHTML = "";
+            memberList.forEach(member => {
+                const option = document.createElement("option");
+                option.value = member.id;
+                option.textContent = member.nama;
+                memberSelect.appendChild(option);
             });
         };
 
-        const viewBuktiBayar = (id) => {
-            const transaksi = transaksiList.find(t => t.id === id);
-            const buktiBayarContainer = document.getElementById("strukContent");
-            buktiBayarContainer.innerHTML = `<img src="${transaksi.buktiBayar}" alt="Bukti Bayar" class="img-fluid" />`;
-            document.getElementById("strukContainer").style.display = "block";
-        };
-
-        const printStruk = (id) => {
-            const transaksi = transaksiList.find(t => t.id === id);
-            const strukContainer = document.getElementById("strukContent");
-            strukContainer.innerHTML = `
-                <h4>Transaksi ID: ${transaksi.id}</h4>
-                <p>Produk: ${transaksi.produk}</p>
-                <p>Jumlah: ${transaksi.jumlah}</p>
-                <p>Total: ${transaksi.total}</p>
-                <p>Diskon: ${transaksi.diskon}</p>
-                <p>Bayar: ${transaksi.bayar}</p>
-                <p>Bukti Bayar: <img src="${transaksi.buktiBayar}" alt="Bukti Bayar" style="width:100px;" /></p>
-            `;
-            document.getElementById("strukContainer").style.display = "block";
-        };
-
-        const deleteTransaksi = (id) => {
-            if (confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
-                const index = transaksiList.findIndex(t => t.id === id);
-                if (index !== -1) {
-                    transaksiList.splice(index, 1);
-                    localStorage.setItem("transaksi", JSON.stringify(transaksiList));
-                    renderRiwayatTransaksi();
-                }
-            }
-        };
-
-        document.getElementById("transaksiForm").addEventListener("submit", (e) => {
-            e.preventDefault();
-            const transaksi = {
-                id: generateTransaksiId(),
-                produk: document.getElementById("produkId").value,
-                item: "Item Name", // Dapatkan dari produk
-                stok: 100, // Atur stok sesuai data produk
-                jumlah: document.getElementById("jumlah").value,
-                total: calculateTotal(),
-                diskon: document.getElementById("diskon").value,
-                bayar: document.getElementById("bayar").value,
-                buktiBayar: URL.createObjectURL(document.getElementById("buktiBayar").files[0]),
-            };
-            transaksiList.push(transaksi);
-            localStorage.setItem("transaksi", JSON.stringify(transaksiList));
-            renderRiwayatTransaksi();
+        document.getElementById("transaksiJenis").addEventListener("change", (event) => {
+            const jenis = event.target.value;
+            document.getElementById("formUmum").classList.toggle("d-none", jenis !== "umum");
+            document.getElementById("formMember").classList.toggle("d-none", jenis !== "member");
         });
 
-        const calculateTotal = () => {
-            const harga = 100; // Ganti dengan harga produk
-            const jumlah = document.getElementById("jumlah").value;
-            const diskon = document.getElementById("diskon").value;
-            let total = harga * jumlah;
-            total -= (total * diskon) / 100;
-            return total;
-        };
+        document.getElementById("formUmum").addEventListener("submit", saveTransaksiUmum);
 
-        renderProdukOptions("produkId");
-        renderRiwayatTransaksi();
+        renderTransaksiTable();
+        renderProdukOptions();
+        renderMemberOptions();
     </script>
 </body>
 </html>
