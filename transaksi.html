@@ -11,13 +11,10 @@
             background-color: #f8f9fa;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
         }
         .table th, .table td {
             text-align: center;
-        }
-        .table td button {
-            width: 100px;
         }
         .keranjang-total {
             font-size: 20px;
@@ -35,6 +32,28 @@
     <div class="container mt-5">
         <h2 class="text-center mb-4"><i class="fas fa-cash-register"></i> Transaksi</h2>
         
+        <!-- Form untuk memilih pelanggan dan jenis pelanggan -->
+        <div class="mb-4">
+            <form id="transaksiForm">
+                <div class="mb-3">
+                    <label for="idTransaksi" class="form-label">ID Transaksi</label>
+                    <input type="text" class="form-control" id="idTransaksi" disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="jenisPelanggan" class="form-label">Jenis Pelanggan</label>
+                    <select class="form-control" id="jenisPelanggan" required>
+                        <option value="umum">Umum</option>
+                        <option value="semi">Semi</option>
+                        <option value="member">Member</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="namaPelanggan" class="form-label">Nama Pelanggan</label>
+                    <input type="text" class="form-control" id="namaPelanggan" required>
+                </div>
+            </form>
+        </div>
+
         <!-- Form untuk memilih produk dan menambah ke keranjang -->
         <div id="keranjangFormContainer" class="mb-4">
             <h4>Keranjang Belanja</h4>
@@ -64,6 +83,7 @@
                     <th>Jumlah</th>
                     <th>Harga Satuan</th>
                     <th>Total</th>
+                    <th>Diskon</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -72,22 +92,9 @@
             </tbody>
         </table>
 
-        <!-- Potongan Harga -->
-        <div class="mb-3">
-            <label for="diskonSelect" class="form-label">Potongan Harga (%)</label>
-            <select class="form-control" id="diskonSelect">
-                <option value="0">Tidak ada potongan</option>
-                <option value="5">5%</option>
-                <option value="10">10%</option>
-                <option value="15">15%</option>
-                <option value="20">20%</option>
-            </select>
-        </div>
-
         <!-- Total Pembayaran -->
         <div class="keranjang-total mb-3">
             <p>Total: <span id="totalPembayaran">0</span></p>
-            <p>Potongan: <span id="potonganHarga">0</span></p>
             <p><strong>Total Setelah Potongan: <span id="totalAkhir">0</span></strong></p>
         </div>
 
@@ -99,8 +106,8 @@
 
     <script>
         const produkList = JSON.parse(localStorage.getItem("produk")) || [];
+        const pelangganList = JSON.parse(localStorage.getItem("pelanggan")) || [];
         const keranjang = JSON.parse(localStorage.getItem("keranjang")) || [];
-        const diskonList = [0, 5, 10, 15, 20];
 
         // Fungsi untuk menampilkan daftar produk pada select
         const renderProdukSelect = () => {
@@ -126,11 +133,19 @@
                 row.insertCell(2).innerText = `Rp ${item.produk.harga}`;
                 row.insertCell(3).innerText = `Rp ${item.total}`;
                 
+                let diskonInput = document.createElement("input");
+                diskonInput.type = "number";
+                diskonInput.classList.add("form-control");
+                diskonInput.placeholder = "Diskon (%)";
+                diskonInput.value = item.diskon || 0;
+                diskonInput.addEventListener("input", (e) => applyDiskon(item.produk.id, e.target.value));
+                row.insertCell(4).appendChild(diskonInput);
+
                 let deleteButton = document.createElement("button");
                 deleteButton.classList.add("btn", "btn-danger");
                 deleteButton.innerHTML = '<i class="fas fa-trash"></i> Hapus';
                 deleteButton.onclick = () => deleteItemFromKeranjang(item.produk.id);
-                row.insertCell(4).appendChild(deleteButton);
+                row.insertCell(5).appendChild(deleteButton);
                 
                 total += item.total;
             });
@@ -141,10 +156,7 @@
 
         // Fungsi untuk menghitung total setelah potongan harga
         const calculateTotalAfterDiscount = (total) => {
-            const diskon = parseInt(document.getElementById("diskonSelect").value);
-            const potongan = (diskon / 100) * total;
-            const totalAkhir = total - potongan;
-            document.getElementById("potonganHarga").innerText = `Rp ${potongan}`;
+            const totalAkhir = total; // Karena diskon akan diterapkan per item
             document.getElementById("totalAkhir").innerText = `Rp ${totalAkhir}`;
         };
 
@@ -155,7 +167,8 @@
                 const item = {
                     produk,
                     jumlah,
-                    total: produk.harga * jumlah
+                    total: produk.harga * jumlah,
+                    diskon: 0
                 };
                 keranjang.push(item);
                 localStorage.setItem("keranjang", JSON.stringify(keranjang));
@@ -173,20 +186,16 @@
             }
         };
 
-        // Event listener untuk form keranjang
-        document.getElementById("keranjangForm").addEventListener("submit", (e) => {
-            e.preventDefault();
-            const produkId = document.getElementById("produkSelect").value;
-            const jumlah = parseInt(document.getElementById("jumlahSelect").value);
-            addItemToKeranjang(produkId, jumlah);
-            document.getElementById("keranjangForm").reset();
-        });
-
-        // Event listener untuk potongan harga
-        document.getElementById("diskonSelect").addEventListener("change", () => {
-            const totalPembayaran = parseInt(document.getElementById("totalPembayaran").innerText.replace("Rp", "").trim());
-            calculateTotalAfterDiscount(totalPembayaran);
-        });
+        // Fungsi untuk mengupdate diskon
+        const applyDiskon = (produkId, diskon) => {
+            const item = keranjang.find(item => item.produk.id === produkId);
+            if (item) {
+                item.diskon = parseFloat(diskon);
+                item.total = item.produk.harga * item.jumlah * (1 - item.diskon / 100);
+                localStorage.setItem("keranjang", JSON.stringify(keranjang));
+                renderKeranjang();
+            }
+        };
 
         // Fungsi untuk checkout
         document.getElementById("checkoutButton").addEventListener("click", () => {
@@ -198,6 +207,25 @@
             alert(`Checkout berhasil! Total pembayaran: Rp ${totalAkhir}`);
             localStorage.removeItem("keranjang");
             renderKeranjang();
+        });
+
+        // Event listener untuk form transaksi
+        document.getElementById("transaksiForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const jenisPelanggan = document.getElementById("jenisPelanggan").value;
+            const namaPelanggan = document.getElementById("namaPelanggan").value;
+
+            let pelangganData = {};
+            if (jenisPelanggan === "semi" || jenisPelanggan === "member") {
+                pelangganData = pelangganList.find(p => p.jenis === jenisPelanggan);
+                document.getElementById("namaPelanggan").value = pelangganData ? pelangganData.nama : namaPelanggan;
+            }
+
+            const idTransaksi = `T-${new Date().getTime()}`;
+            document.getElementById("idTransaksi").value = idTransaksi;
+
+            // Simpan transaksi di localStorage jika diperlukan
+            // localStorage.setItem("transaksi", JSON.stringify(...));
         });
 
         // Inisialisasi produk dan keranjang
