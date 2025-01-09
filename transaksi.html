@@ -27,20 +27,32 @@
                 <input type="text" class="form-control" id="idTransaksi" disabled>
             </div>
             <div class="mb-3">
-                <label for="produkNama" class="form-label">Nama Produk</label>
-                <input type="text" class="form-control" id="produkNama" disabled>
+                <label for="pelanggan" class="form-label">Pilih Pelanggan</label>
+                <select class="form-select" id="pelanggan" required>
+                    <option value="" disabled selected>Pilih Pelanggan</option>
+                    <option value="umum">Umum</option>
+                    <option value="member">Member</option>
+                    <option value="semi">Semi Member</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="produk" class="form-label">Nama Produk</label>
+                <select class="form-select" id="produk" required>
+                    <option value="" disabled selected>Pilih Produk</option>
+                    <!-- Produk akan diisi otomatis melalui JavaScript -->
+                </select>
             </div>
             <div class="mb-3">
                 <label for="jumlahProduk" class="form-label">Jumlah</label>
-                <input type="number" class="form-control" id="jumlahProduk" disabled>
+                <input type="number" class="form-control" id="jumlahProduk" required>
+            </div>
+            <div class="mb-3">
+                <label for="diskon" class="form-label">Diskon (%)</label>
+                <input type="number" class="form-control" id="diskon" value="0" required>
             </div>
             <div class="mb-3">
                 <label for="totalHarga" class="form-label">Total Harga</label>
                 <input type="text" class="form-control" id="totalHarga" disabled>
-            </div>
-            <div class="mb-3">
-                <label for="status" class="form-label">Status Pembayaran</label>
-                <input type="text" class="form-control" id="status" disabled>
             </div>
             <div class="mb-3">
                 <label for="metodePembayaran" class="form-label">Metode Pembayaran</label>
@@ -71,70 +83,50 @@
     </div>
 
     <script>
-        // Data transaksi yang diambil dari LocalStorage
-        const transaksiList = JSON.parse(localStorage.getItem("transaksi")) || [];
+        // Data yang diambil dari LocalStorage
         const produkList = JSON.parse(localStorage.getItem("produk")) || [];
+        const transaksiList = JSON.parse(localStorage.getItem("transaksi")) || [];
+        const pelangganList = JSON.parse(localStorage.getItem("pelanggan")) || [];
 
-        // Mendapatkan ID transaksi dari URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const transaksiId = urlParams.get("id");
+        const formTransaksi = document.getElementById("formTransaksi");
+        const produkSelect = document.getElementById("produk");
+        const totalHargaField = document.getElementById("totalHarga");
+        const pelangganSelect = document.getElementById("pelanggan");
+        const metodePembayaranSelect = document.getElementById("metodePembayaran");
+        const diskonField = document.getElementById("diskon");
 
-        const renderTransaksiInfo = (transaksiId) => {
-            const transaksi = transaksiList.find(t => t.id === transaksiId);
-            if (transaksi) {
-                document.getElementById("idTransaksi").value = transaksi.id;
-                document.getElementById("produkNama").value = transaksi.produk;
-                document.getElementById("jumlahProduk").value = transaksi.jumlah;
-                document.getElementById("totalHarga").value = `Rp ${transaksi.totalHarga.toLocaleString()}`;
-                document.getElementById("status").value = transaksi.status;
-                document.getElementById("metodePembayaran").value = transaksi.metodePembayaran;
+        // Mengisi dropdown produk dengan data produk
+        const loadProduk = () => {
+            produkList.forEach(produk => {
+                const option = document.createElement("option");
+                option.value = produk.id;
+                option.textContent = `${produk.nama} - Rp ${produk.harga.toLocaleString()}`;
+                produkSelect.appendChild(option);
+            });
+        };
+
+        // Menghitung total harga dengan diskon
+        const hitungTotalHarga = () => {
+            const produkId = produkSelect.value;
+            const jumlah = parseInt(document.getElementById("jumlahProduk").value) || 0;
+            const diskon = parseInt(diskonField.value) || 0;
+
+            const produk = produkList.find(p => p.id === produkId);
+            if (produk) {
+                let total = produk.harga * jumlah;
+                total -= total * (diskon / 100);
+                totalHargaField.value = `Rp ${total.toLocaleString()}`;
             }
         };
 
-        const konfirmasiTransaksi = (event) => {
-            event.preventDefault();
-
-            const idTransaksi = document.getElementById("idTransaksi").value;
-            const metodePembayaran = document.getElementById("metodePembayaran").value;
-            const buktiPembayaran = document.getElementById("buktiPembayaran").files[0];
-
-            const transaksi = transaksiList.find(t => t.id === idTransaksi);
-            if (transaksi) {
-                const totalHarga = transaksi.totalHarga;
-                let status = "Belum Lunas";
-
-                if (metodePembayaran === "Cash") {
-                    const bayar = transaksi.pembayaran ? transaksi.pembayaran.bayar : 0;
-                    if (bayar >= totalHarga) {
-                        status = "Lunas";
-                    }
-                } else {
-                    status = "Menunggu Konfirmasi Pembayaran";
-                }
-
-                transaksi.status = status;
-                transaksi.buktiPembayaran = buktiPembayaran ? buktiPembayaran.name : null;
-
-                // Simpan data transaksi yang telah diperbarui ke localStorage
-                localStorage.setItem("transaksi", JSON.stringify(transaksiList));
-
-                if (status === "Lunas") {
-                    tampilkanStruk(transaksi);
-                } else {
-                    document.getElementById("formTransaksi").reset();
-                    document.getElementById("konfirmasiPembayaran").classList.remove("d-none");
-                }
-            } else {
-                alert("Transaksi tidak ditemukan!");
-            }
-        };
-
+        // Menampilkan struk pembayaran
         const tampilkanStruk = (transaksi) => {
             const strukDiv = document.getElementById("strukContent");
             strukDiv.innerHTML = `
                 <p><strong>ID Transaksi:</strong> ${transaksi.id}</p>
                 <p><strong>Produk:</strong> ${transaksi.produk}</p>
                 <p><strong>Jumlah:</strong> ${transaksi.jumlah}</p>
+                <p><strong>Diskon:</strong> ${transaksi.diskon}%</p>
                 <p><strong>Total Harga:</strong> Rp ${transaksi.totalHarga.toLocaleString()}</p>
                 <p><strong>Status Pembayaran:</strong> ${transaksi.status}</p>
                 <p><strong>Metode Pembayaran:</strong> ${transaksi.metodePembayaran}</p>
@@ -143,13 +135,53 @@
             document.getElementById("strukPembayaran").classList.remove("d-none");
         };
 
-        // Inisialisasi Halaman
-        if (transaksiId) {
-            renderTransaksiInfo(transaksiId);
-        }
+        // Mengonfirmasi transaksi
+        const konfirmasiTransaksi = (event) => {
+            event.preventDefault();
 
-        // Event listener untuk form transaksi
-        document.getElementById("formTransaksi").addEventListener("submit", konfirmasiTransaksi);
+            const idTransaksi = new Date().getTime(); // ID otomatis berdasarkan timestamp
+            const produkId = produkSelect.value;
+            const jumlah = parseInt(document.getElementById("jumlahProduk").value) || 0;
+            const diskon = parseInt(diskonField.value) || 0;
+            const metodePembayaran = metodePembayaranSelect.value;
+            const buktiPembayaran = document.getElementById("buktiPembayaran").files[0];
+
+            const produk = produkList.find(p => p.id === produkId);
+            if (produk) {
+                let totalHarga = produk.harga * jumlah;
+                totalHarga -= totalHarga * (diskon / 100);
+
+                const transaksi = {
+                    id: idTransaksi,
+                    produk: produk.nama,
+                    jumlah: jumlah,
+                    diskon: diskon,
+                    totalHarga: totalHarga,
+                    status: metodePembayaran === "Cash" && totalHarga === produk.harga * jumlah ? "Lunas" : "Menunggu Konfirmasi Pembayaran",
+                    metodePembayaran: metodePembayaran,
+                    buktiPembayaran: buktiPembayaran ? buktiPembayaran.name : null,
+                    pelanggan: pelangganSelect.value
+                };
+
+                transaksiList.push(transaksi);
+                localStorage.setItem("transaksi", JSON.stringify(transaksiList));
+
+                if (transaksi.status === "Lunas") {
+                    tampilkanStruk(transaksi);
+                } else {
+                    document.getElementById("formTransaksi").reset();
+                    document.getElementById("konfirmasiPembayaran").classList.remove("d-none");
+                }
+            } else {
+                alert("Produk tidak ditemukan!");
+            }
+        };
+
+        // Inisialisasi halaman
+        loadProduk();
+
+        // Event listener form
+        formTransaksi.addEventListener("submit", konfirmasiTransaksi);
     </script>
 </body>
 </html>
