@@ -21,20 +21,27 @@ const rolePermissions = {
         "home",
         "laporan"
     ],
-    Pengguna: [] // Hak akses untuk Pengguna disesuaikan oleh Admin
+    Pengguna: [] // Pengguna default tidak memiliki akses; dapat diatur oleh Admin
 };
 
-// Fungsi untuk menghasilkan navigasi berdasarkan peran
-function generateNavbar(role) {
-    const navItems = rolePermissions[role] || [];
-    let navbar = "";
+// Fungsi untuk memvalidasi akses ke halaman
+function validateAccess(currentPage) {
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
 
-    navItems.forEach((item) => {
-        navbar += `<li class="nav-item">
-                      <a class="nav-link text-capitalize" href="${item}.html">${item}</a>
-                   </li>`;
-    });
+    if (!loggedInUser) {
+        alert("Anda harus login terlebih dahulu!");
+        window.location.href = "login.html";
+        return false;
+    }
 
-    navbar += `<li class="nav-item"><a class="nav-link" href="login.html">Logout</a></li>`;
-    return navbar;
+    const role = loggedInUser.role;
+    const permissions = rolePermissions[role] || [];
+
+    if (!permissions.includes(currentPage)) {
+        alert("Akses ditolak! Anda tidak memiliki izin untuk mengakses halaman ini.");
+        window.location.href = "home.html";
+        return false;
+    }
+
+    return true;
 }
