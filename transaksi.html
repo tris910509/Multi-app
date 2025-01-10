@@ -31,15 +31,23 @@
         <!-- Input Manual Pelanggan Umum -->
         <div id="formPelangganUmum" class="mb-3">
             <label for="namaPelangganUmum" class="form-label">Nama Pelanggan</label>
-            <input type="text" class="form-control" id="namaPelangganUmum" placeholder="Masukkan nama pelanggan umum">
+            <input type="text" class="form-control mb-2" id="namaPelangganUmum" placeholder="Masukkan nama pelanggan umum">
+            <label for="handphonePelangganUmum" class="form-label">Nomor Handphone</label>
+            <input type="text" class="form-control mb-2" id="handphonePelangganUmum" placeholder="Masukkan nomor handphone">
+            <label for="alamatPelangganUmum" class="form-label">Alamat</label>
+            <textarea class="form-control" id="alamatPelangganUmum" rows="2" placeholder="Masukkan alamat"></textarea>
         </div>
 
         <!-- Pilihan Pelanggan Member -->
         <div id="formPelangganMember" class="mb-3 d-none">
             <label for="pilihPelanggan" class="form-label">Pilih Pelanggan Member</label>
-            <select class="form-select" id="pilihPelanggan">
+            <select class="form-select mb-2" id="pilihPelanggan">
                 <!-- Data pelanggan akan dimuat di sini -->
             </select>
+            <label for="handphoneMember" class="form-label">Nomor Handphone</label>
+            <input type="text" class="form-control mb-2" id="handphoneMember" readonly>
+            <label for="alamatMember" class="form-label">Alamat</label>
+            <textarea class="form-control" id="alamatMember" rows="2" readonly></textarea>
         </div>
 
         <!-- Keranjang -->
@@ -106,8 +114,8 @@
         // Inisialisasi localStorage untuk pelanggan dan produk
         if (!localStorage.getItem('pelanggan')) {
             localStorage.setItem('pelanggan', JSON.stringify([
-                { id: 'PLG001', nama: 'John Doe', peran: 'Member' },
-                { id: 'PLG002', nama: 'Jane Smith', peran: 'Member' }
+                { id: 'PLG001', nama: 'John Doe', handphone: '081234567890', alamat: 'Jl. Kebon Jeruk', peran: 'Member' },
+                { id: 'PLG002', nama: 'Jane Smith', handphone: '081987654321', alamat: 'Jl. Mangga Dua', peran: 'Member' }
             ]));
         }
         if (!localStorage.getItem('produk')) {
@@ -119,19 +127,6 @@
 
         const pelangganData = JSON.parse(localStorage.getItem('pelanggan'));
         const produkData = JSON.parse(localStorage.getItem('produk'));
-        let keranjang = [];
-
-        // Tampilkan produk di dropdown
-        const tampilkanProduk = () => {
-            const produkSelect = document.getElementById('produkId');
-            produkSelect.innerHTML = '';
-            produkData.forEach(produk => {
-                const option = document.createElement('option');
-                option.value = produk.id;
-                option.textContent = `${produk.nama} - Rp ${produk.harga}`;
-                produkSelect.appendChild(option);
-            });
-        };
 
         // Tampilkan pelanggan member di dropdown
         const tampilkanPelanggan = () => {
@@ -145,7 +140,17 @@
             });
         };
 
-        // Fungsi untuk mengelola perubahan jenis pelanggan
+        // Perbarui data handphone dan alamat pelanggan member
+        document.getElementById('pilihPelanggan').addEventListener('change', (e) => {
+            const pelangganId = e.target.value;
+            const pelanggan = pelangganData.find(p => p.id === pelangganId);
+            if (pelanggan) {
+                document.getElementById('handphoneMember').value = pelanggan.handphone;
+                document.getElementById('alamatMember').value = pelanggan.alamat;
+            }
+        });
+
+        // Kelola jenis pelanggan
         document.getElementById('jenisPelanggan').addEventListener('change', (e) => {
             const jenis = e.target.value;
             if (jenis === 'Umum') {
@@ -157,55 +162,8 @@
             }
         });
 
-        // Tambahkan produk ke keranjang
-        document.getElementById('btnTambahKeranjang').addEventListener('click', () => {
-            const produkId = document.getElementById('produkId').value;
-            const jumlah = parseInt(document.getElementById('jumlahProduk').value);
-
-            const produk = produkData.find(p => p.id === produkId);
-            if (!produk) return alert('Produk tidak ditemukan');
-            if (jumlah > produk.stok) return alert('Stok tidak mencukupi');
-
-            keranjang.push({ ...produk, jumlah });
-            tampilkanKeranjang();
-        });
-
-        // Tampilkan keranjang
-        const tampilkanKeranjang = () => {
-            const keranjangTable = document.getElementById('keranjangTable');
-            keranjangTable.innerHTML = '';
-
-            let total = 0;
-            keranjang.forEach((item, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${item.nama}</td>
-                    <td>Rp ${item.harga}</td>
-                    <td>${item.jumlah}</td>
-                    <td>Rp ${item.harga * item.jumlah}</td>
-                    <td>
-                        <button class="btn btn-danger btn-sm" onclick="hapusItem(${index})">
-                            <i class="fas fa-trash"></i> Hapus
-                        </button>
-                    </td>
-                `;
-                keranjangTable.appendChild(row);
-                total += item.harga * item.jumlah;
-            });
-
-            document.getElementById('totalBelanja').textContent = `Rp ${total}`;
-        };
-
-        // Hapus item dari keranjang
-        const hapusItem = (index) => {
-            keranjang.splice(index, 1);
-            tampilkanKeranjang();
-        };
-
         // Inisialisasi
         document.addEventListener('DOMContentLoaded', () => {
-            tampilkanProduk();
             tampilkanPelanggan();
         });
     </script>
