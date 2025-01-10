@@ -42,6 +42,10 @@
                         <label for="price" class="form-label">Harga Satuan</label>
                         <input type="number" class="form-control" id="price" placeholder="Masukkan harga satuan">
                     </div>
+                    <div class="mb-3">
+                        <label for="discount" class="form-label">Diskon (%)</label>
+                        <input type="number" class="form-control" id="discount" placeholder="Masukkan diskon (%)">
+                    </div>
                     <button type="button" class="btn btn-primary" id="addItem">Tambah Barang</button>
                 </form>
             </div>
@@ -55,6 +59,7 @@
                             <th scope="col">Nama Barang</th>
                             <th scope="col">Jumlah</th>
                             <th scope="col">Harga</th>
+                            <th scope="col">Diskon</th>
                             <th scope="col">Total</th>
                         </tr>
                     </thead>
@@ -88,10 +93,15 @@
             const item = document.getElementById('item').value;
             const quantity = parseInt(document.getElementById('quantity').value);
             const price = parseFloat(document.getElementById('price').value);
+            const discount = parseFloat(document.getElementById('discount').value);
 
             if (item && quantity && price) {
-                const total = quantity * price;
-                transactionList.push({ item, quantity, price, total });
+                // Menghitung total harga setelah diskon
+                const subtotal = quantity * price;
+                const discountAmount = (discount / 100) * subtotal;
+                const total = subtotal - discountAmount;
+
+                transactionList.push({ item, quantity, price, discount, total, discountAmount, subtotal });
                 totalAmount += total;
                 updateTransactionList();
                 updateTotalAmount();
@@ -121,6 +131,7 @@
                                 <td>${transaction.item}</td>
                                 <td>${transaction.quantity}</td>
                                 <td>Rp ${transaction.price.toLocaleString()}</td>
+                                <td>${transaction.discount}% (Rp ${transaction.discountAmount.toLocaleString()})</td>
                                 <td>Rp ${transaction.total.toLocaleString()}</td>
                             </tr>`;
                 transactionListElement.insertAdjacentHTML('beforeend', row);
@@ -137,6 +148,7 @@
             document.getElementById('item').value = '';
             document.getElementById('quantity').value = '';
             document.getElementById('price').value = '';
+            document.getElementById('discount').value = '';
         }
 
         // Reset transaksi setelah selesai
