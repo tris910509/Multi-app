@@ -24,30 +24,33 @@
 
         <!-- Form Transaksi -->
         <form id="formTransaksi">
-            <h5>Data Pelanggan</h5>
+            <h5>Pilih Pelanggan</h5>
             <div class="mb-3">
                 <label for="pelangganId" class="form-label">Pilih Pelanggan</label>
                 <select class="form-select" id="pelangganId" onchange="handlePelangganChange()">
+                    <option value="" disabled selected>Pilih Pelanggan</option>
                     <!-- Data pelanggan akan dimuat di sini -->
                 </select>
             </div>
 
-            <!-- Data Pelanggan yang Terpilih -->
-            <div id="pelangganDetail" style="display:none;">
-                <h5>Detail Pelanggan</h5>
-                <dl class="row">
-                    <dt class="col-sm-3">Nama</dt>
-                    <dd class="col-sm-9" id="namaPelanggan">-</dd>
-
-                    <dt class="col-sm-3">No Handphone</dt>
-                    <dd class="col-sm-9" id="noHandphone">-</dd>
-
-                    <dt class="col-sm-3">Peran</dt>
-                    <dd class="col-sm-9" id="peranPelanggan">-</dd>
-                </dl>
+            <!-- Data Pelanggan -->
+            <div id="dataPelanggan" style="display:none;">
+                <h5>Data Pelanggan</h5>
+                <div class="mb-3">
+                    <label for="namaPelanggan" class="form-label">Nama Pelanggan</label>
+                    <input type="text" class="form-control" id="namaPelanggan" disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="noHandphone" class="form-label">No Handphone</label>
+                    <input type="text" class="form-control" id="noHandphone" disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="peran" class="form-label">Peran</label>
+                    <input type="text" class="form-control" id="peran" disabled>
+                </div>
             </div>
 
-            <!-- Pilih Produk untuk Transaksi -->
+            <!-- Produk yang Dipesan -->
             <h5>Pilih Produk</h5>
             <div class="mb-3">
                 <label for="produkId" class="form-label">Pilih Produk</label>
@@ -56,16 +59,20 @@
                 </select>
             </div>
 
-            <!-- Jumlah, Diskon, dan Total -->
+            <!-- Harga, Item, Jumlah, Diskon, dan Total -->
             <div class="mb-3">
                 <label for="jumlahProduk" class="form-label">Jumlah</label>
                 <input type="number" class="form-control" id="jumlahProduk" min="1" value="1" required>
             </div>
             <div class="mb-3">
-                <label for="diskon" class="form-label">Diskon (%)</label>
+                <label for="diskon" class="form-label">Diskon</label>
                 <input type="number" class="form-control" id="diskon" value="0">
+                <small>Diskon dalam %</small>
             </div>
-
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="switchDiskon" onchange="toggleDiskonType()">
+                <label class="form-check-label" for="switchDiskon">Gunakan Diskon dalam Rp</label>
+            </div>
             <div class="mb-3">
                 <label for="totalHarga" class="form-label">Total Harga</label>
                 <input type="text" class="form-control" id="totalHarga" disabled>
@@ -85,7 +92,7 @@
                         <th>Jumlah</th>
                         <th>Harga Satuan</th>
                         <th>Total Harga</th>
-                        <th>Diskon (%)</th>
+                        <th>Diskon</th>
                         <th>Total Setelah Diskon</th>
                         <th>Aksi</th>
                     </tr>
@@ -100,9 +107,13 @@
             </div>
         </div>
 
-        <!-- Pembayaran -->
+        <!-- Pembayaran dan Konfirmasi -->
         <form id="formPembayaran" class="mt-5">
             <h5>Pembayaran</h5>
+            <div class="mb-3">
+                <label for="idTransaksi" class="form-label">ID Transaksi</label>
+                <input type="text" class="form-control" id="idTransaksi" disabled>
+            </div>
             <div class="mb-3">
                 <label for="metodePembayaran" class="form-label">Metode Pembayaran</label>
                 <select class="form-select" id="metodePembayaran">
@@ -122,6 +133,14 @@
         const pelangganList = JSON.parse(localStorage.getItem("pelanggan")) || [];
         const metodePembayaranList = JSON.parse(localStorage.getItem("metodePembayaran")) || [];
         let keranjang = [];
+        let isDiskonRp = false;
+
+        const generateIDTransaksi = () => `TRX-${new Date().getTime()}`;
+
+        const updateTotalKeseluruhan = () => {
+            const total = keranjang.reduce((sum, item) => sum + (item.totalDiskon), 0);
+            document.getElementById("totalKeseluruhan").textContent = `Rp ${total.toLocaleString()}`;
+        };
 
         const renderPelangganSelect = () => {
             const pelangganSelect = document.getElementById("pelangganId");
@@ -129,7 +148,7 @@
             pelangganList.forEach(pel => {
                 const option = document.createElement("option");
                 option.value = pel.id;
-                option.textContent = `${pel.nama} - ${pel.peran}`;
+                option.textContent = `${pel.nama} - ${pel.noHandphone} - ${pel.peran}`;
                 pelangganSelect.appendChild(option);
             });
         };
@@ -161,11 +180,15 @@
             const pelanggan = pelangganList.find(pel => pel.id === pelangganId);
 
             if (pelanggan) {
-                document.getElementById("pelangganDetail").style.display = "block";
-                document.getElementById("namaPelanggan").textContent = pelanggan.nama;
-                document.getElementById("noHandphone").textContent = pelanggan.noHandphone;
-                document.getElementById("peranPelanggan").textContent = pelanggan.peran;
+                document.getElementById("namaPelanggan").value = pelanggan.nama;
+                document.getElementById("noHandphone").value = pelanggan.noHandphone;
+                document.getElementById("peran").value = pelanggan.peran;
+                document.getElementById("dataPelanggan").style.display = "block";
             }
+        };
+
+        const toggleDiskonType = () => {
+            isDiskonRp = !isDiskonRp;
         };
 
         const tambahKeKeranjang = (event) => {
@@ -179,7 +202,7 @@
                 const harga = produk.harga;
                 const totalHarga = harga * jumlah;
 
-                const totalDiskon = totalHarga - (totalHarga * diskon / 100);
+                const totalDiskon = isDiskonRp ? (totalHarga - diskon) : (totalHarga - (totalHarga * diskon / 100));
                 
                 keranjang.push({ ...produk, jumlah, diskon, totalHarga, totalDiskon });
                 renderKeranjang();
@@ -218,16 +241,13 @@
             renderKeranjang();
         };
 
-        const updateTotalKeseluruhan = () => {
-            const total = keranjang.reduce((sum, item) => sum + item.totalDiskon, 0);
-            document.getElementById("totalKeseluruhan").textContent = `Rp ${total.toLocaleString()}`;
-        };
-
         const konfirmasiPembayaran = (event) => {
             event.preventDefault();
 
+            const idTransaksi = document.getElementById("idTransaksi").value;
+            const metodePembayaran = document.getElementById("metodePembayaran").value;
             const bayar = parseInt(document.getElementById("bayar").value) || 0;
-            const total = keranjang.reduce((sum, item) => sum + item.totalDiskon, 0);
+            const total = keranjang.reduce((sum, item) => sum + (item.totalDiskon), 0);
 
             if (bayar >= total) {
                 alert("Pembayaran berhasil!");
@@ -238,14 +258,4 @@
         };
 
         // Inisialisasi
-        document.getElementById("formTransaksi").addEventListener("submit", tambahKeKeranjang);
-        document.getElementById("formPembayaran").addEventListener("submit", konfirmasiPembayaran);
-        document.getElementById("clearKeranjang").addEventListener("click", kosongkanKeranjang);
-
-        // Render Select Options
-        renderPelangganSelect();
-        renderProdukSelect();
-        renderMetodePembayaranSelect();
-    </script>
-</body>
-</html>
+        document.getElementById
