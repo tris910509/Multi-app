@@ -73,10 +73,8 @@
                         <tr>
                             <th>#</th>
                             <th>Nama Produk</th>
-                            <th>Item</th>
-                            <th>Harga</th>
-                            <th>Diskon</th>
                             <th>Jumlah</th>
+                            <th>Harga</th>
                             <th>Total</th>
                             <th>Aksi</th>
                         </tr>
@@ -86,7 +84,6 @@
                     </tbody>
                 </table>
                 <p class="text-end"><strong>Total Belanja: <span id="totalBelanja">Rp 0</span></strong></p>
-                <button type="button" class="btn btn-danger mt-3" id="btnCancelKeranjang">Cancel</button>
             </div>
         </div>
 
@@ -178,21 +175,12 @@
         const tambahKeKeranjang = () => {
             const produkId = document.getElementById('produkId').value;
             const jumlah = parseInt(document.getElementById('jumlahProduk').value);
-            const diskon = parseFloat(document.getElementById('diskon').value) || 0;
 
             const produk = produkData.find(p => p.id === produkId);
             if (!produk) return alert('Produk tidak ditemukan');
             if (jumlah > produk.stok) return alert('Stok tidak mencukupi');
 
-            const totalHarga = produk.harga * jumlah;
-            const totalDenganDiskon = totalHarga - (totalHarga * (diskon / 100));
-
-            keranjang.push({
-                ...produk,
-                jumlah,
-                diskon,
-                total: totalDenganDiskon
-            });
+            keranjang.push({ ...produk, jumlah });
             tampilkanKeranjang();
         };
 
@@ -200,29 +188,24 @@
         const tampilkanKeranjang = () => {
             const keranjangTable = document.querySelector('#keranjangTable');
             keranjangTable.innerHTML = '';
-            let totalBelanja = 0;
+            let total = 0;
             keranjang.forEach((item, index) => {
-                totalBelanja += item.total;
+                total += item.harga * item.jumlah;
                 keranjangTable.innerHTML += `
                     <tr>
                         <td>${index + 1}</td>
                         <td>${item.nama}</td>
                         <td>${item.jumlah}</td>
                         <td>Rp ${item.harga}</td>
-                        <td>Rp ${item.diskon}</td>
-                        <td>${item.jumlah}</td>
-                        <td>Rp ${item.total}</td>
+                        <td>Rp ${item.harga * item.jumlah}</td>
                         <td>
                             <button class="btn btn-danger btn-sm" onclick="hapusDariKeranjang(${index})">
                                 <i class="fas fa-trash"></i> Hapus
                             </button>
-                            <button class="btn btn-secondary btn-sm" onclick="cancelItem(${index})">
-                                <i class="fas fa-times"></i> Cancel
-                            </button>
                         </td>
                     </tr>`;
             });
-            document.getElementById('totalBelanja').textContent = `Rp ${totalBelanja}`;
+            document.getElementById('totalBelanja').textContent = `Rp ${total}`;
         };
 
         // Fungsi untuk menghapus item dari keranjang
@@ -231,23 +214,49 @@
             tampilkanKeranjang();
         };
 
-        // Fungsi untuk membatalkan item dari keranjang
-        const cancelItem = index => {
-            // Proses pembatalan item di keranjang jika diperlukan
-            keranjang[index].jumlah = 0; // Set jumlah jadi 0
+        // Fungsi untuk menyelesaikan transaksi
+        const selesaikanTransaksi = () => {
+            const diskon = parseFloat(document.getElementById('diskon').value) || 0;
+            const bayar = parseFloat(document.getElementById('bayar').value) || 0;
+            const total = keranjang.reduce((acc, item) => acc + item.harga * item.jumlah, 0);
+            const totalSetelahDiskon = total - (total * diskon / 100);
+            const kembalian = bayar - totalSetelahDiskon;
+
+            if (kembalian < 0) {
+                return alert('Jumlah bayar kurang dari total belanja');
+            }
+
+            // Simpan transaksi
+            const transaksi = {
+                idTransaksi: document.getElementById('idTransaksi').value,
+                pelanggan: document.getElementById('jenisPelanggan').value === 'Member' 
+                          ? pelangganData.find(p => p.id === document.getElementById('idMember').value).nama
+                          : document.getElementById('namaPelanggan').value,
+                produk: keranjang,
+                total: totalSetelahDiskon,
+                bayar: bayar,
+                kembalian: kembalian,
+                metodePembayaran: document.getElementById('metodePembayaran').value
+            };
+
+            console.log('Transaksi selesai:', transaksi);
+            alert('Transaksi selesai, terima kasih!');
+            
+            // Clear form after transaction
+            document.getElementById('formTransaksi').reset();
+            keranjang = [];
             tampilkanKeranjang();
         };
 
-        // Event Listener untuk tombol tambah keranjang
-        document.getElementById('btnTambahKeranjang').addEventListener('click', tambahKeKeranjang);
-
-        // Event Listener untuk perubahan jenis pelanggan
-        document.getElementById('jenisPelanggan').addEventListener('change', ubahJenisPelanggan);
-
-        // Inisialisasi
-        tampilkanProduk();
-        tampilkanMember();
-        ubahJenisPelanggan();
+        // Inisialisasi halaman
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('idTransaksi').value = generateIdTransaksi();
+            tampilkanProduk();
+            tampilkanMember();
+            document.getElementById('jenisPelanggan').addEventListener('change', ubahJenisPelanggan);
+            document.getElementById('btnTambahKeranjang').addEventListener('click', tambahKeKeranjang);
+            document.getElementById('btnSelesaiTransaksi').addEventListener('click', selesaikanTransaksi);
+        });
     </script>
 </body>
 </html>
