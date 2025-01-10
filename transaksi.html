@@ -11,172 +11,202 @@
             background-color: #f8f9fa;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
         }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center mb-4"><i class="fas fa-cart-plus"></i> Halaman Transaksi</h2>
+        <h2 class="text-center mb-4"><i class="fas fa-shopping-cart"></i> Transaksi</h2>
 
-        <!-- Form Transaksi -->
-        <div class="card mb-3">
-            <div class="card-header"><strong>Form Transaksi</strong></div>
-            <div class="card-body">
-                <form id="formTransaksi">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="idTransaksi" class="form-label">ID Transaksi</label>
-                            <input type="text" class="form-control" id="idTransaksi" disabled>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="jenisPelanggan" class="form-label">Jenis Pelanggan</label>
-                            <select class="form-select" id="jenisPelanggan">
-                                <option value="Umum">Umum</option>
-                                <option value="Member">Member</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 d-none" id="selectMemberPelanggan">
-                            <label for="idMember" class="form-label">Pilih Member</label>
-                            <select class="form-select" id="idMember">
-                                <!-- Data member dimuat di sini -->
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="produkId" class="form-label">Pilih Produk</label>
-                            <select class="form-select" id="produkId">
-                                <!-- Data produk dimuat di sini -->
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="jumlahProduk" class="form-label">Jumlah</label>
-                            <input type="number" class="form-control" id="jumlahProduk" placeholder="Masukkan jumlah" min="1">
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-primary mt-3" id="btnTambahKeranjang">
-                        <i class="fas fa-plus"></i> Tambah ke Keranjang
-                    </button>
-                </form>
-            </div>
+        <!-- Pilihan Jenis Pelanggan -->
+        <div class="mb-3">
+            <label for="jenisPelanggan" class="form-label">Jenis Pelanggan</label>
+            <select class="form-select" id="jenisPelanggan">
+                <option value="Umum">Umum</option>
+                <option value="Member">Member</option>
+            </select>
+        </div>
+
+        <!-- Input Manual Pelanggan Umum -->
+        <div id="formPelangganUmum" class="mb-3">
+            <label for="namaPelangganUmum" class="form-label">Nama Pelanggan</label>
+            <input type="text" class="form-control" id="namaPelangganUmum" placeholder="Masukkan nama pelanggan umum">
+        </div>
+
+        <!-- Pilihan Pelanggan Member -->
+        <div id="formPelangganMember" class="mb-3 d-none">
+            <label for="pilihPelanggan" class="form-label">Pilih Pelanggan Member</label>
+            <select class="form-select" id="pilihPelanggan">
+                <!-- Data pelanggan akan dimuat di sini -->
+            </select>
         </div>
 
         <!-- Keranjang -->
         <div class="card mb-3">
             <div class="card-header"><strong>Keranjang</strong></div>
             <div class="card-body">
-                <table class="table table-bordered">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="produkId" class="form-label">Pilih Produk</label>
+                        <select class="form-select" id="produkId"></select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="jumlahProduk" class="form-label">Jumlah</label>
+                        <input type="number" class="form-control" id="jumlahProduk" min="1" placeholder="Jumlah">
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button class="btn btn-primary mt-3" id="btnTambahKeranjang">
+                            <i class="fas fa-cart-plus"></i> Tambah
+                        </button>
+                    </div>
+                </div>
+
+                <table class="table table-bordered mt-3">
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
                             <th>Nama Produk</th>
-                            <th>Jumlah</th>
                             <th>Harga</th>
+                            <th>Jumlah</th>
                             <th>Total</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody id="keranjangTable">
-                        <!-- Data keranjang dimuat di sini -->
-                    </tbody>
+                    <tbody id="keranjangTable"></tbody>
                 </table>
-                <p class="text-end mt-3"><strong>Total Belanja: <span id="totalBelanja">Rp 0</span></strong></p>
+                <h5 class="text-end">Total: <span id="totalBelanja">Rp 0</span></h5>
             </div>
         </div>
 
         <!-- Pembayaran -->
-        <div class="card mb-3">
+        <div class="card">
             <div class="card-header"><strong>Pembayaran</strong></div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="metodePembayaran" class="form-label">Metode Pembayaran</label>
-                        <select class="form-select" id="metodePembayaran">
-                            <option value="Tunai">Tunai</option>
-                            <option value="Transfer">Transfer</option>
-                        </select>
+                        <label for="diskon" class="form-label">Diskon (%)</label>
+                        <input type="number" class="form-control" id="diskon" min="0" max="100" placeholder="Diskon">
                     </div>
                     <div class="col-md-6">
-                        <label for="bayar" class="form-label">Bayar</label>
-                        <input type="number" class="form-control" id="bayar" placeholder="Masukkan jumlah bayar" min="0">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="kembalian" class="form-label">Kembalian</label>
-                        <input type="text" class="form-control" id="kembalian" disabled>
+                        <label for="bayar" class="form-label">Bayar (Rp)</label>
+                        <input type="number" class="form-control" id="bayar" min="0" placeholder="Jumlah Bayar">
                     </div>
                 </div>
-                <button type="button" class="btn btn-success mt-3" id="btnSelesaiTransaksi">
-                    <i class="fas fa-check"></i> Selesaikan Transaksi
-                </button>
-            </div>
-        </div>
-
-        <!-- Riwayat Transaksi -->
-        <div class="card mt-3">
-            <div class="card-header"><strong>Riwayat Transaksi</strong></div>
-            <div class="card-body">
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID Transaksi</th>
-                            <th>Nama Pelanggan</th>
-                            <th>Tanggal</th>
-                            <th>Total</th>
-                            <th>Metode Pembayaran</th>
-                        </tr>
-                    </thead>
-                    <tbody id="riwayatTransaksiTable">
-                        <!-- Data riwayat transaksi dimuat di sini -->
-                    </tbody>
-                </table>
+                <div class="mt-3">
+                    <button class="btn btn-success" id="btnSelesaiTransaksi">
+                        <i class="fas fa-check"></i> Selesai Transaksi
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const keranjang = [];
-        const riwayatTransaksi = JSON.parse(localStorage.getItem("riwayatTransaksi")) || [];
-        
-        document.addEventListener("DOMContentLoaded", () => {
-            const idTransaksi = document.getElementById("idTransaksi");
-            const riwayatTransaksiTable = document.getElementById("riwayatTransaksiTable");
+        // Inisialisasi localStorage untuk pelanggan dan produk
+        if (!localStorage.getItem('pelanggan')) {
+            localStorage.setItem('pelanggan', JSON.stringify([
+                { id: 'PLG001', nama: 'John Doe', peran: 'Member' },
+                { id: 'PLG002', nama: 'Jane Smith', peran: 'Member' }
+            ]));
+        }
+        if (!localStorage.getItem('produk')) {
+            localStorage.setItem('produk', JSON.stringify([
+                { id: 'P001', nama: 'Produk A', harga: 10000, stok: 50 },
+                { id: 'P002', nama: 'Produk B', harga: 20000, stok: 30 }
+            ]));
+        }
 
-            // Generate ID Transaksi unik
-            idTransaksi.value = `TRX${Date.now()}`;
+        const pelangganData = JSON.parse(localStorage.getItem('pelanggan'));
+        const produkData = JSON.parse(localStorage.getItem('produk'));
+        let keranjang = [];
 
-            // Render Riwayat Transaksi
-            function renderRiwayat() {
-                riwayatTransaksiTable.innerHTML = riwayatTransaksi.map((trx, index) => `
-                    <tr>
-                        <td>${trx.id}</td>
-                        <td>${trx.namaPelanggan}</td>
-                        <td>${trx.tanggal}</td>
-                        <td>Rp ${trx.total}</td>
-                        <td>${trx.metode}</td>
-                    </tr>
-                `).join("");
-            }
-
-            renderRiwayat();
-
-            // Tambah transaksi ke riwayat
-            document.getElementById("btnSelesaiTransaksi").addEventListener("click", () => {
-                const namaPelanggan = "Umum"; // Replace sesuai input
-                const total = 100000; // Replace sesuai keranjang
-                const tanggal = new Date().toLocaleDateString();
-                const metode = document.getElementById("metodePembayaran").value;
-
-                const transaksi = {
-                    id: idTransaksi.value,
-                    namaPelanggan,
-                    tanggal,
-                    total,
-                    metode
-                };
-
-                riwayatTransaksi.push(transaksi);
-                localStorage.setItem("riwayatTransaksi", JSON.stringify(riwayatTransaksi));
-                renderRiwayat();
+        // Tampilkan produk di dropdown
+        const tampilkanProduk = () => {
+            const produkSelect = document.getElementById('produkId');
+            produkSelect.innerHTML = '';
+            produkData.forEach(produk => {
+                const option = document.createElement('option');
+                option.value = produk.id;
+                option.textContent = `${produk.nama} - Rp ${produk.harga}`;
+                produkSelect.appendChild(option);
             });
+        };
+
+        // Tampilkan pelanggan member di dropdown
+        const tampilkanPelanggan = () => {
+            const pelangganSelect = document.getElementById('pilihPelanggan');
+            pelangganSelect.innerHTML = '';
+            pelangganData.forEach(pelanggan => {
+                const option = document.createElement('option');
+                option.value = pelanggan.id;
+                option.textContent = `${pelanggan.nama} (${pelanggan.id})`;
+                pelangganSelect.appendChild(option);
+            });
+        };
+
+        // Fungsi untuk mengelola perubahan jenis pelanggan
+        document.getElementById('jenisPelanggan').addEventListener('change', (e) => {
+            const jenis = e.target.value;
+            if (jenis === 'Umum') {
+                document.getElementById('formPelangganUmum').classList.remove('d-none');
+                document.getElementById('formPelangganMember').classList.add('d-none');
+            } else if (jenis === 'Member') {
+                document.getElementById('formPelangganUmum').classList.add('d-none');
+                document.getElementById('formPelangganMember').classList.remove('d-none');
+            }
+        });
+
+        // Tambahkan produk ke keranjang
+        document.getElementById('btnTambahKeranjang').addEventListener('click', () => {
+            const produkId = document.getElementById('produkId').value;
+            const jumlah = parseInt(document.getElementById('jumlahProduk').value);
+
+            const produk = produkData.find(p => p.id === produkId);
+            if (!produk) return alert('Produk tidak ditemukan');
+            if (jumlah > produk.stok) return alert('Stok tidak mencukupi');
+
+            keranjang.push({ ...produk, jumlah });
+            tampilkanKeranjang();
+        });
+
+        // Tampilkan keranjang
+        const tampilkanKeranjang = () => {
+            const keranjangTable = document.getElementById('keranjangTable');
+            keranjangTable.innerHTML = '';
+
+            let total = 0;
+            keranjang.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.nama}</td>
+                    <td>Rp ${item.harga}</td>
+                    <td>${item.jumlah}</td>
+                    <td>Rp ${item.harga * item.jumlah}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="hapusItem(${index})">
+                            <i class="fas fa-trash"></i> Hapus
+                        </button>
+                    </td>
+                `;
+                keranjangTable.appendChild(row);
+                total += item.harga * item.jumlah;
+            });
+
+            document.getElementById('totalBelanja').textContent = `Rp ${total}`;
+        };
+
+        // Hapus item dari keranjang
+        const hapusItem = (index) => {
+            keranjang.splice(index, 1);
+            tampilkanKeranjang();
+        };
+
+        // Inisialisasi
+        document.addEventListener('DOMContentLoaded', () => {
+            tampilkanProduk();
+            tampilkanPelanggan();
         });
     </script>
 </body>
