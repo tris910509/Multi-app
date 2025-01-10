@@ -13,44 +13,51 @@
         .container {
             max-width: 1200px;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center mb-4"><i class="fas fa-cart-plus"></i> Halaman Transaksi</h2>
+        <h2 class="text-center mb-4"><i class="fas fa-shopping-cart"></i> Halaman Transaksi</h2>
 
         <!-- Form Transaksi -->
-        <div class="card mb-3">
+        <div class="card mb-4">
             <div class="card-header"><strong>Form Transaksi</strong></div>
             <div class="card-body">
                 <form id="formTransaksi">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="idTransaksi" class="form-label">ID Transaksi</label>
                             <input type="text" class="form-control" id="idTransaksi" disabled>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="jenisPelanggan" class="form-label">Jenis Pelanggan</label>
                             <select class="form-select" id="jenisPelanggan">
                                 <option value="Umum">Umum</option>
                                 <option value="Member">Member</option>
                             </select>
                         </div>
-                        <div class="col-md-6 d-none" id="selectMemberPelanggan">
+                        <div class="col-md-4 d-none" id="selectMemberPelanggan">
                             <label for="idMember" class="form-label">Pilih Member</label>
                             <select class="form-select" id="idMember">
-                                <!-- Data member dimuat di sini -->
+                                <!-- Data member akan dimuat di sini -->
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="produkId" class="form-label">Pilih Produk</label>
                             <select class="form-select" id="produkId">
-                                <!-- Data produk dimuat di sini -->
+                                <!-- Data produk akan dimuat di sini -->
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="jumlahProduk" class="form-label">Jumlah</label>
                             <input type="number" class="form-control" id="jumlahProduk" placeholder="Masukkan jumlah" min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="stokProduk" class="form-label">Stok Tersedia</label>
+                            <input type="number" class="form-control" id="stokProduk" disabled>
                         </div>
                     </div>
                     <button type="button" class="btn btn-primary mt-3" id="btnTambahKeranjang">
@@ -61,7 +68,7 @@
         </div>
 
         <!-- Keranjang -->
-        <div class="card mb-3">
+        <div class="card mb-4">
             <div class="card-header"><strong>Keranjang</strong></div>
             <div class="card-body">
                 <table class="table table-bordered">
@@ -76,7 +83,7 @@
                         </tr>
                     </thead>
                     <tbody id="keranjangTable">
-                        <!-- Data keranjang dimuat di sini -->
+                        <!-- Data keranjang akan dimuat di sini -->
                     </tbody>
                 </table>
                 <div class="row mt-3">
@@ -86,10 +93,10 @@
                             <label class="form-check-label" for="aktifkanPotongan">Aktifkan Potongan Harga</label>
                         </div>
                     </div>
-                    <div class="col-md-6 d-flex align-items-center justify-content-end">
+                    <div class="col-md-6">
                         <div class="input-group" id="formPotongan" style="display: none;">
-                            <input type="number" class="form-control" id="potonganNominal" placeholder="Nominal Potongan" min="0" style="display: none;">
-                            <input type="number" class="form-control" id="potonganPersen" placeholder="Diskon (%)" min="0" max="100" style="display: none;">
+                            <input type="number" class="form-control" id="potonganNominal" placeholder="Nominal Potongan" min="0">
+                            <input type="number" class="form-control d-none" id="potonganPersen" placeholder="Diskon (%)" min="0" max="100">
                             <button class="btn btn-outline-secondary" id="btnNominal">Nominal</button>
                             <button class="btn btn-outline-secondary" id="btnPersen">Persentase</button>
                         </div>
@@ -100,10 +107,17 @@
         </div>
 
         <!-- Pembayaran -->
-        <div class="card">
+        <div class="card mb-4">
             <div class="card-header"><strong>Pembayaran</strong></div>
             <div class="card-body">
                 <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="metodePembayaran" class="form-label">Metode Pembayaran</label>
+                        <select class="form-select" id="metodePembayaran">
+                            <option value="Tunai">Tunai</option>
+                            <option value="Transfer">Transfer</option>
+                        </select>
+                    </div>
                     <div class="col-md-6">
                         <label for="bayar" class="form-label">Bayar</label>
                         <input type="number" class="form-control" id="bayar" placeholder="Masukkan jumlah bayar" min="0">
@@ -118,56 +132,41 @@
                 </button>
             </div>
         </div>
+
+        <!-- Struk Transaksi -->
+        <div class="card hidden" id="strukTransaksi">
+            <div class="card-header"><strong>Struk Transaksi</strong></div>
+            <div class="card-body">
+                <p>ID Transaksi: <span id="strukIdTransaksi"></span></p>
+                <p>Jenis Pelanggan: <span id="strukJenisPelanggan"></span></p>
+                <p>Metode Pembayaran: <span id="strukMetodePembayaran"></span></p>
+                <p>Total Belanja: <span id="strukTotalBelanja"></span></p>
+                <p>Bayar: <span id="strukBayar"></span></p>
+                <p>Kembalian: <span id="strukKembalian"></span></p>
+            </div>
+        </div>
     </div>
 
     <script>
+        // Inisialisasi data untuk simulasi
         let keranjang = [];
         let potonganAktif = false;
-        let potonganTipe = "nominal"; // "nominal" atau "persen"
+        let potonganTipe = "nominal";
+        let totalBelanja = 0;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const aktifkanPotongan = document.getElementById("aktifkanPotongan");
-            const formPotongan = document.getElementById("formPotongan");
-            const potonganNominal = document.getElementById("potonganNominal");
-            const potonganPersen = document.getElementById("potonganPersen");
-
-            aktifkanPotongan.addEventListener("change", () => {
-                potonganAktif = aktifkanPotongan.checked;
-                formPotongan.style.display = potonganAktif ? "flex" : "none";
-                if (!potonganAktif) {
-                    potonganNominal.style.display = "none";
-                    potonganPersen.style.display = "none";
-                }
-            });
-
-            document.getElementById("btnNominal").addEventListener("click", () => {
-                potonganTipe = "nominal";
-                potonganNominal.style.display = "block";
-                potonganPersen.style.display = "none";
-            });
-
-            document.getElementById("btnPersen").addEventListener("click", () => {
-                potonganTipe = "persen";
-                potonganNominal.style.display = "none";
-                potonganPersen.style.display = "block";
-            });
-        });
-
-        function hitungTotal() {
-            const total = keranjang.reduce((acc, item) => acc + item.harga * item.jumlah, 0);
-            let totalSetelahPotongan = total;
+        function updateTotalBelanja() {
+            let total = keranjang.reduce((acc, item) => acc + item.harga * item.jumlah, 0);
 
             if (potonganAktif) {
-                if (potonganTipe === "nominal") {
-                    const potongan = parseFloat(document.getElementById("potonganNominal").value) || 0;
-                    totalSetelahPotongan = total - potongan;
-                } else if (potonganTipe === "persen") {
-                    const diskon = parseFloat(document.getElementById("potonganPersen").value) || 0;
-                    totalSetelahPotongan = total - (total * diskon / 100);
-                }
+                const potongan = potonganTipe === "nominal"
+                    ? parseFloat(document.getElementById("potonganNominal").value) || 0
+                    : total * (parseFloat(document.getElementById("potonganPersen").value) / 100) || 0;
+
+                total -= potongan;
             }
 
-            document.getElementById("totalBelanja").textContent = `Rp ${totalSetelahPotongan}`;
+            totalBelanja = total;
+            document.getElementById("totalBelanja").textContent = `Rp ${total}`;
         }
     </script>
 </body>
