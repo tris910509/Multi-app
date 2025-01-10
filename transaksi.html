@@ -154,6 +154,127 @@
         let potonganTipe = "nominal";
         let totalBelanja = 0;
 
+        // Inisialisasi Variabel
+let keranjang = [];
+let totalBelanja = 0;
+let idTransaksi = `TRX-${Date.now()}`;
+document.getElementById("idTransaksi").value = idTransaksi;
+
+// Event Listener: Jenis Pelanggan
+document.getElementById("jenisPelanggan").addEventListener("change", function () {
+    const jenisPelanggan = this.value;
+    const selectMemberPelanggan = document.getElementById("selectMemberPelanggan");
+    selectMemberPelanggan.classList.toggle("d-none", jenisPelanggan !== "Member");
+});
+
+// Fungsi Tambah ke Keranjang
+document.getElementById("btnTambahKeranjang").addEventListener("click", function () {
+    const produkId = document.getElementById("produkId").value;
+    const jumlahProduk = parseInt(document.getElementById("jumlahProduk").value);
+    const stokProduk = parseInt(document.getElementById("stokProduk").value);
+
+    if (!produkId || jumlahProduk <= 0 || jumlahProduk > stokProduk) {
+        alert("Harap masukkan data yang valid.");
+        return;
+    }
+
+    const produkNama = document.getElementById("produkId").selectedOptions[0].text;
+    const hargaProduk = parseInt(document.getElementById("produkId").selectedOptions[0].dataset.harga);
+    const totalHarga = hargaProduk * jumlahProduk;
+
+    // Tambahkan ke Keranjang
+    keranjang.push({ produkId, produkNama, jumlahProduk, hargaProduk, totalHarga });
+    totalBelanja += totalHarga;
+    document.getElementById("totalBelanja").innerText = `Rp ${totalBelanja.toLocaleString()}`;
+
+    updateKeranjang();
+});
+
+// Fungsi Update Keranjang
+function updateKeranjang() {
+    const keranjangTable = document.getElementById("keranjangTable");
+    keranjangTable.innerHTML = "";
+
+    keranjang.forEach((item, index) => {
+        const row = `<tr>
+            <td>${index + 1}</td>
+            <td>${item.produkNama}</td>
+            <td>${item.jumlahProduk}</td>
+            <td>Rp ${item.hargaProduk.toLocaleString()}</td>
+            <td>Rp ${item.totalHarga.toLocaleString()}</td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="hapusItem(${index})"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+        keranjangTable.innerHTML += row;
+    });
+}
+
+// Fungsi Hapus Item
+function hapusItem(index) {
+    totalBelanja -= keranjang[index].totalHarga;
+    keranjang.splice(index, 1);
+    document.getElementById("totalBelanja").innerText = `Rp ${totalBelanja.toLocaleString()}`;
+    updateKeranjang();
+}
+
+// Potongan Harga
+document.getElementById("aktifkanPotongan").addEventListener("change", function () {
+    const formPotongan = document.getElementById("formPotongan");
+    formPotongan.style.display = this.checked ? "flex" : "none";
+});
+
+// Nominal atau Persen
+let diskonMode = "nominal";
+document.getElementById("btnNominal").addEventListener("click", function () {
+    diskonMode = "nominal";
+    document.getElementById("potonganNominal").classList.remove("d-none");
+    document.getElementById("potonganPersen").classList.add("d-none");
+});
+document.getElementById("btnPersen").addEventListener("click", function () {
+    diskonMode = "persen";
+    document.getElementById("potonganNominal").classList.add("d-none");
+    document.getElementById("potonganPersen").classList.remove("d-none");
+});
+
+// Event Listener: Selesaikan Transaksi
+document.getElementById("btnSelesaiTransaksi").addEventListener("click", function () {
+    const bayar = parseInt(document.getElementById("bayar").value);
+    const metodePembayaran = document.getElementById("metodePembayaran").value;
+
+    if (bayar < totalBelanja) {
+        alert("Jumlah bayar tidak mencukupi.");
+        return;
+    }
+
+    const kembalian = bayar - totalBelanja;
+    document.getElementById("kembalian").value = `Rp ${kembalian.toLocaleString()}`;
+
+    // Tampilkan Struk
+    document.getElementById("strukTransaksi").classList.remove("hidden");
+    document.getElementById("strukIdTransaksi").innerText = idTransaksi;
+    document.getElementById("strukJenisPelanggan").innerText = document.getElementById("jenisPelanggan").value;
+    document.getElementById("strukMetodePembayaran").innerText = metodePembayaran;
+    document.getElementById("strukTotalBelanja").innerText = `Rp ${totalBelanja.toLocaleString()}`;
+    document.getElementById("strukBayar").innerText = `Rp ${bayar.toLocaleString()}`;
+    document.getElementById("strukKembalian").innerText = `Rp ${kembalian.toLocaleString()}`;
+
+    // Reset Form
+    resetTransaksi();
+});
+
+// Fungsi Reset Transaksi
+function resetTransaksi() {
+    keranjang = [];
+    totalBelanja = 0;
+    document.getElementById("totalBelanja").innerText = "Rp 0";
+    document.getElementById("formTransaksi").reset();
+    document.getElementById("keranjangTable").innerHTML = "";
+    idTransaksi = `TRX-${Date.now()}`;
+    document.getElementById("idTransaksi").value = idTransaksi;
+}
+
+
         function updateTotalBelanja() {
             let total = keranjang.reduce((acc, item) => acc + item.harga * item.jumlah, 0);
 
@@ -167,6 +288,7 @@
 
             totalBelanja = total;
             document.getElementById("totalBelanja").textContent = `Rp ${total}`;
+            
         }
     </script>
 </body>
