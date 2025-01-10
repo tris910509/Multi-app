@@ -36,10 +36,6 @@
                                 <option value="Member">Member</option>
                             </select>
                         </div>
-                        <div class="col-md-6 d-none" id="inputNamaPelanggan">
-                            <label for="namaPelanggan" class="form-label">Nama Pelanggan</label>
-                            <input type="text" class="form-control" id="namaPelanggan" placeholder="Masukkan nama pelanggan">
-                        </div>
                         <div class="col-md-6 d-none" id="selectMemberPelanggan">
                             <label for="idMember" class="form-label">Pilih Member</label>
                             <select class="form-select" id="idMember">
@@ -83,7 +79,23 @@
                         <!-- Data keranjang dimuat di sini -->
                     </tbody>
                 </table>
-                <p class="text-end"><strong>Total Belanja: <span id="totalBelanja">Rp 0</span></strong></p>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="aktifkanPotongan">
+                            <label class="form-check-label" for="aktifkanPotongan">Aktifkan Potongan Harga</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center justify-content-end">
+                        <div class="input-group" id="formPotongan" style="display: none;">
+                            <input type="number" class="form-control" id="potonganNominal" placeholder="Nominal Potongan" min="0" style="display: none;">
+                            <input type="number" class="form-control" id="potonganPersen" placeholder="Diskon (%)" min="0" max="100" style="display: none;">
+                            <button class="btn btn-outline-secondary" id="btnNominal">Nominal</button>
+                            <button class="btn btn-outline-secondary" id="btnPersen">Persentase</button>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-end mt-3"><strong>Total Belanja: <span id="totalBelanja">Rp 0</span></strong></p>
             </div>
         </div>
 
@@ -92,17 +104,6 @@
             <div class="card-header"><strong>Pembayaran</strong></div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="diskon" class="form-label">Diskon (%)</label>
-                        <input type="number" class="form-control" id="diskon" placeholder="Masukkan diskon" min="0">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="metodePembayaran" class="form-label">Metode Pembayaran</label>
-                        <select class="form-select" id="metodePembayaran">
-                            <option value="Tunai">Tunai</option>
-                            <option value="Transfer">Transfer</option>
-                        </select>
-                    </div>
                     <div class="col-md-6">
                         <label for="bayar" class="form-label">Bayar</label>
                         <input type="number" class="form-control" id="bayar" placeholder="Masukkan jumlah bayar" min="0">
@@ -120,143 +121,54 @@
     </div>
 
     <script>
-        // Inisialisasi data pelanggan dan produk
-        const pelangganData = JSON.parse(localStorage.getItem('pelanggan')) || [];
-        const produkData = JSON.parse(localStorage.getItem('produk')) || [];
         let keranjang = [];
+        let potonganAktif = false;
+        let potonganTipe = "nominal"; // "nominal" atau "persen"
 
-        // Fungsi untuk menghasilkan ID Transaksi
-        const generateIdTransaksi = () => 'TRX' + Date.now();
+        document.addEventListener("DOMContentLoaded", () => {
+            const aktifkanPotongan = document.getElementById("aktifkanPotongan");
+            const formPotongan = document.getElementById("formPotongan");
+            const potonganNominal = document.getElementById("potonganNominal");
+            const potonganPersen = document.getElementById("potonganPersen");
 
-        // Fungsi untuk menampilkan produk di dropdown
-        const tampilkanProduk = () => {
-            const produkSelect = document.getElementById('produkId');
-            produkSelect.innerHTML = '';
-            produkData.forEach(produk => {
-                const option = document.createElement('option');
-                option.value = produk.id;
-                option.textContent = `${produk.nama} - Rp ${produk.harga}`;
-                produkSelect.appendChild(option);
-            });
-        };
-
-        // Fungsi untuk menampilkan data pelanggan member di dropdown
-        const tampilkanMember = () => {
-            const memberSelect = document.getElementById('idMember');
-            memberSelect.innerHTML = '';
-            pelangganData
-                .filter(p => p.peran === 'Member')
-                .forEach(member => {
-                    const option = document.createElement('option');
-                    option.value = member.id;
-                    option.textContent = `${member.nama}`;
-                    memberSelect.appendChild(option);
-                });
-        };
-
-        // Fungsi untuk mengelola input pelanggan berdasarkan jenis pelanggan
-        const ubahJenisPelanggan = () => {
-            const jenisPelanggan = document.getElementById('jenisPelanggan').value;
-            if (jenisPelanggan === 'Member') {
-                document.getElementById('inputNamaPelanggan').classList.add('d-none');
-                document.getElementById('selectMemberPelanggan').classList.remove('d-none');
-                const selectedMember = document.getElementById('idMember').value;
-                if (selectedMember) {
-                    const member = pelangganData.find(p => p.id === selectedMember);
-                    document.getElementById('namaPelanggan').value = member ? member.nama : '';
+            aktifkanPotongan.addEventListener("change", () => {
+                potonganAktif = aktifkanPotongan.checked;
+                formPotongan.style.display = potonganAktif ? "flex" : "none";
+                if (!potonganAktif) {
+                    potonganNominal.style.display = "none";
+                    potonganPersen.style.display = "none";
                 }
-            } else {
-                document.getElementById('inputNamaPelanggan').classList.remove('d-none');
-                document.getElementById('selectMemberPelanggan').classList.add('d-none');
-            }
-        };
-
-        // Fungsi untuk menambahkan produk ke keranjang
-        const tambahKeKeranjang = () => {
-            const produkId = document.getElementById('produkId').value;
-            const jumlah = parseInt(document.getElementById('jumlahProduk').value);
-
-            const produk = produkData.find(p => p.id === produkId);
-            if (!produk) return alert('Produk tidak ditemukan');
-            if (jumlah > produk.stok) return alert('Stok tidak mencukupi');
-
-            keranjang.push({ ...produk, jumlah });
-            tampilkanKeranjang();
-        };
-
-        // Fungsi untuk menampilkan keranjang
-        const tampilkanKeranjang = () => {
-            const keranjangTable = document.querySelector('#keranjangTable');
-            keranjangTable.innerHTML = '';
-            let total = 0;
-            keranjang.forEach((item, index) => {
-                total += item.harga * item.jumlah;
-                keranjangTable.innerHTML += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${item.nama}</td>
-                        <td>${item.jumlah}</td>
-                        <td>Rp ${item.harga}</td>
-                        <td>Rp ${item.harga * item.jumlah}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="hapusDariKeranjang(${index})">
-                                <i class="fas fa-trash"></i> Hapus
-                            </button>
-                        </td>
-                    </tr>`;
             });
-            document.getElementById('totalBelanja').textContent = `Rp ${total}`;
-        };
 
-        // Fungsi untuk menghapus item dari keranjang
-        const hapusDariKeranjang = index => {
-            keranjang.splice(index, 1);
-            tampilkanKeranjang();
-        };
+            document.getElementById("btnNominal").addEventListener("click", () => {
+                potonganTipe = "nominal";
+                potonganNominal.style.display = "block";
+                potonganPersen.style.display = "none";
+            });
 
-        // Fungsi untuk menyelesaikan transaksi
-        const selesaikanTransaksi = () => {
-            const diskon = parseFloat(document.getElementById('diskon').value) || 0;
-            const bayar = parseFloat(document.getElementById('bayar').value) || 0;
+            document.getElementById("btnPersen").addEventListener("click", () => {
+                potonganTipe = "persen";
+                potonganNominal.style.display = "none";
+                potonganPersen.style.display = "block";
+            });
+        });
+
+        function hitungTotal() {
             const total = keranjang.reduce((acc, item) => acc + item.harga * item.jumlah, 0);
-            const totalSetelahDiskon = total - (total * diskon / 100);
-            const kembalian = bayar - totalSetelahDiskon;
+            let totalSetelahPotongan = total;
 
-            if (kembalian < 0) {
-                return alert('Jumlah bayar kurang dari total belanja');
+            if (potonganAktif) {
+                if (potonganTipe === "nominal") {
+                    const potongan = parseFloat(document.getElementById("potonganNominal").value) || 0;
+                    totalSetelahPotongan = total - potongan;
+                } else if (potonganTipe === "persen") {
+                    const diskon = parseFloat(document.getElementById("potonganPersen").value) || 0;
+                    totalSetelahPotongan = total - (total * diskon / 100);
+                }
             }
 
-            // Simpan transaksi
-            const transaksi = {
-                idTransaksi: document.getElementById('idTransaksi').value,
-                pelanggan: document.getElementById('jenisPelanggan').value === 'Member' 
-                          ? pelangganData.find(p => p.id === document.getElementById('idMember').value).nama
-                          : document.getElementById('namaPelanggan').value,
-                produk: keranjang,
-                total: totalSetelahDiskon,
-                bayar: bayar,
-                kembalian: kembalian,
-                metodePembayaran: document.getElementById('metodePembayaran').value
-            };
-
-            console.log('Transaksi selesai:', transaksi);
-            alert('Transaksi selesai, terima kasih!');
-            
-            // Clear form after transaction
-            document.getElementById('formTransaksi').reset();
-            keranjang = [];
-            tampilkanKeranjang();
-        };
-
-        // Inisialisasi halaman
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('idTransaksi').value = generateIdTransaksi();
-            tampilkanProduk();
-            tampilkanMember();
-            document.getElementById('jenisPelanggan').addEventListener('change', ubahJenisPelanggan);
-            document.getElementById('btnTambahKeranjang').addEventListener('click', tambahKeKeranjang);
-            document.getElementById('btnSelesaiTransaksi').addEventListener('click', selesaikanTransaksi);
-        });
+            document.getElementById("totalBelanja").textContent = `Rp ${totalSetelahPotongan}`;
+        }
     </script>
 </body>
 </html>
