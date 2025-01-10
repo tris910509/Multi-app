@@ -12,9 +12,21 @@
 <body>
 
     <div class="container mt-5">
-        <h2 class="text-center">Transaksi POS</h2>
-        
         <div class="row">
+            <!-- Header Toko dan Info Transaksi -->
+            <div class="col-12 mb-4">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>Nama Toko: Toko Sukses</h3>
+                        <p>Nomor HP: +62 812 3456 7890</p>
+                    </div>
+                    <div class="text-end">
+                        <h4>No. Transaksi: #12345</h4>
+                        <p>Nama User: Admin</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Form input untuk item -->
             <div class="col-md-6">
                 <form>
@@ -67,6 +79,11 @@
         let transactionList = [];
         let totalAmount = 0;
 
+        // Mengambil informasi user berdasarkan peran (Admin dalam contoh ini)
+        const userRole = "Admin"; // Ini bisa diubah sesuai peran yang login
+        document.querySelector("p").textContent = "Nama User: " + userRole;
+
+        // Fungsi untuk menambah item ke daftar transaksi
         document.getElementById('addItem').addEventListener('click', function () {
             const item = document.getElementById('item').value;
             const quantity = parseInt(document.getElementById('quantity').value);
@@ -84,6 +101,7 @@
             }
         });
 
+        // Fungsi untuk menyelesaikan transaksi
         document.getElementById('completeTransaction').addEventListener('click', function () {
             if (transactionList.length > 0) {
                 alert("Transaksi selesai! Total yang harus dibayar: Rp " + totalAmount);
@@ -93,6 +111,7 @@
             }
         });
 
+        // Update daftar barang yang dibeli
         function updateTransactionList() {
             const transactionListElement = document.getElementById('transactionList');
             transactionListElement.innerHTML = '';
@@ -108,16 +127,19 @@
             });
         }
 
+        // Update total harga
         function updateTotalAmount() {
             document.getElementById('totalAmount').textContent = "Rp " + totalAmount.toLocaleString();
         }
 
+        // Reset form input setelah item ditambahkan
         function clearForm() {
             document.getElementById('item').value = '';
             document.getElementById('quantity').value = '';
             document.getElementById('price').value = '';
         }
 
+        // Reset transaksi setelah selesai
         function resetTransaction() {
             transactionList = [];
             totalAmount = 0;
